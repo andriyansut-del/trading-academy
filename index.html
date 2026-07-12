@@ -321,6 +321,15 @@ tbody tr:hover{background:var(--surface-2);}
   color:var(--text-dim);
   font-size:13px;
 }
+.sticky-col{
+  position:sticky;
+  right:0;
+  background:var(--surface);
+  box-shadow:-6px 0 8px -6px rgba(0,0,0,0.5);
+  z-index:2;
+}
+tbody tr:hover .sticky-col{background:var(--surface-2);}
+thead .sticky-col{background:var(--surface);z-index:3;}
 
 .modal-backdrop{
   position:fixed;inset:0;
@@ -855,7 +864,7 @@ function renderInvestors(){
       <td><span class="tag ${periodPaid?'teal':'red'}">${periodPaid?'Paid':'Pending'}</span></td>
       <td class="mono">${fmtINR(totalPaid(inv))}</td>
       <td class="mono">${inv.payoutHistory.length ? formatDMY(inv.payoutHistory[0].date) : '—'}</td>
-      <td>
+      <td class="sticky-col">
         <div class="row-actions">
           <button class="btn btn-ghost btn-sm" data-action="pay" data-id="${inv.id}">Record payout</button>
           <button class="btn btn-ghost btn-sm" data-action="history" data-id="${inv.id}">History</button>
@@ -878,7 +887,7 @@ function renderInvestors(){
       <table>
         <thead><tr>
           <th>Investor</th><th>Principal</th><th>Monthly ROI %</th><th>Yearly ROI %</th><th>Frequency</th>
-          <th>Investment Date</th><th>Lock-in</th><th>End Date</th><th>Payout Amount</th><th>Next Due Date</th><th>Current Period</th><th>Total Paid</th><th>Last Payout</th><th>Actions</th>
+          <th>Investment Date</th><th>Lock-in</th><th>End Date</th><th>Payout Amount</th><th>Next Due Date</th><th>Current Period</th><th>Total Paid</th><th>Last Payout</th><th class="sticky-col">Actions</th>
         </tr></thead>
         <tbody>${rows || `<tr><td colspan="14"><div class="empty-state">No investors yet. Add your first one.</div></td></tr>`}</tbody>
       </table>
@@ -964,7 +973,7 @@ function renderStudents(){
       <td class="mono">${fmtINR(st.fee)}</td>
       <td><span class="tag ${st.feeStatus==='Paid'?'teal':st.feeStatus==='Partial'?'gold':'red'}">${st.feeStatus}</span></td>
       <td class="mono">${formatDMY(st.enrollDate)}</td>
-      <td>
+      <td class="sticky-col">
         <div class="row-actions">
           <button class="btn btn-ghost btn-sm" data-action="edit-student" data-id="${st.id}">Edit</button>
           <button class="btn btn-ghost btn-sm" data-action="delete-student" data-id="${st.id}" style="color:var(--red);">Delete</button>
@@ -987,7 +996,7 @@ function renderStudents(){
     </div>
     <div class="panel">
       <table>
-        <thead><tr><th>Student</th><th>Program</th><th>Fee</th><th>Status</th><th>Enrolled</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Student</th><th>Program</th><th>Fee</th><th>Status</th><th>Enrolled</th><th class="sticky-col">Actions</th></tr></thead>
         <tbody>${rows || `<tr><td colspan="6"><div class="empty-state">No students in this view yet.</div></td></tr>`}</tbody>
       </table>
     </div>
