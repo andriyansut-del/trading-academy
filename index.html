@@ -331,7 +331,7 @@ tbody tr:hover{background:var(--surface-2);}
   border:1px solid var(--border);
   border-radius:4px;
   width:100%;
-  max-width:440px;
+  max-width:460px;
   max-height:88vh;
   overflow-y:auto;
   padding:24px;
@@ -339,6 +339,14 @@ tbody tr:hover{background:var(--surface-2);}
 .modal h3{font-family:var(--font-display);font-size:16px;margin-bottom:18px;}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field-hint{
+  font-size:11px;
+  color:var(--text-dim);
+  margin-top:-10px;
+  margin-bottom:16px;
+  font-family:var(--font-mono);
+}
+.field-hint b{color:var(--teal);}
 
 .tabs-bar{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
 .chip-btn{
@@ -437,18 +445,27 @@ function saveUsers(){ storageSet('users', state.users); }
 function saveInvestors(){ storageSet('investors', state.investors); }
 function saveStudents(){ storageSet('students', state.students); }
 
-function monthlyDue(inv){
-  if(inv.frequency === 'Monthly') return inv.principal * inv.roiPercent / 100 / 12;
-  return 0;
+/* ---------------- ROI / lock-in calculations ---------------- */
+function addMonths(dateStr, months){
+  if(!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setMonth(d.getMonth() + Number(months || 0));
+  return d.toISOString().slice(0,10);
 }
-function yearlyDue(inv){
-  if(inv.frequency === 'Yearly') return inv.principal * inv.roiPercent / 100;
-  return 0;
+function investmentEndDate(inv){
+  return addMonths(inv.investmentDate, inv.lockInMonths);
+}
+function monthlyAmount(inv){
+  return inv.principal * (inv.roiMonthlyPercent || 0) / 100;
+}
+function yearlyAmount(inv){
+  return inv.principal * (inv.roiYearlyPercent || 0) / 100;
 }
 function suggestedPayout(inv){
-  return inv.frequency === 'Monthly' ? monthlyDue(inv) : yearlyDue(inv);
+  return inv.roiFrequency === 'Monthly' ? monthlyAmount(inv) : yearlyAmount(inv);
 }
 
+/* ---------------- Auth actions ---------------- */
 function tryLogin(username, password){
   const u = state.users.find(x => x.username === username && x.password === password);
   if(!u){ state.loginError = 'Invalid username or password.'; render(); return; }
@@ -459,6 +476,7 @@ function tryLogin(username, password){
 }
 function logout(){ state.currentUser = null; render(); }
 
+/* ---------------- Modals ---------------- */
 function openModal(type, payload){ state.modal = {type, payload: payload || {}}; render(); }
 function closeModal(){ state.modal = null; render(); }
 
@@ -466,19 +484,26 @@ function submitInvestorForm(e, editId){
   e.preventDefault();
   const f = e.target;
   const principal = parseFloat(f.principal.value);
-  const roiPercent = parseFloat(f.roiPercent.value);
+  const roiMonthlyPercent = parseFloat(f.roiMonthlyPercent.value) || 0;
+  const roiYearlyPercent = parseFloat(f.roiYearlyPercent.value) || 0;
+  const roiFrequency = f.roiFrequency.value;
+  const investmentDate = f.investmentDate.value;
+  const lockInMonths = parseInt(f.lockInMonths.value, 10) || 0;
+
   if(editId){
     const inv = state.investors.find(x => x.id === editId);
     Object.assign(inv, {
       name:f.name.value, email:f.email.value, phone:f.phone.value,
-      principal, roiPercent, frequency:f.frequency.value
+      principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
+      investmentDate, lockInMonths
     });
   } else {
     const id = uid();
     state.investors.push({
       id, name:f.name.value, email:f.email.value, phone:f.phone.value,
-      principal, roiPercent, frequency:f.frequency.value,
-      joinDate: todayStr(), payoutHistory:[]
+      principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
+      investmentDate, lockInMonths,
+      payoutHistory:[]
     });
     if(f.createLogin.checked){
       const username = f.loginUsername.value.trim();
@@ -538,6 +563,7 @@ function deleteStudent(id){
 
 window.addEventListener('DOMContentLoaded', loadAll);
 
+/* ================= RENDER ================= */
 function render(){
   if(!state.ready){ root.innerHTML = '<div style="padding:40px;color:#8A96AE;font-family:IBM Plex Mono, monospace;">Loading console…</div>'; return; }
   root.innerHTML = state.currentUser ? renderApp() : renderLogin();
@@ -546,7 +572,7 @@ function render(){
 
 function renderTicker(){
   const totalPrincipal = state.investors.reduce((s,i)=>s+i.principal,0);
-  const monthlyObl = state.investors.reduce((s,i)=>s+monthlyDue(i),0);
+  const monthlyObl = state.investors.filter(i=>i.roiFrequency==='Monthly').reduce((s,i)=>s+monthlyAmount(i),0);
   const items = `
     <span>TOTAL AUM <b>${fmtINR(totalPrincipal)}</b></span>
     <span>ACTIVE INVESTORS <b>${state.investors.length}</b></span>
@@ -630,8 +656,8 @@ function renderAdminTab(){
 
 function renderOverview(){
   const totalPrincipal = state.investors.reduce((s,i)=>s+i.principal,0);
-  const monthlyObl = state.investors.reduce((s,i)=>s+monthlyDue(i),0);
-  const yearlyObl = state.investors.reduce((s,i)=>s+yearlyDue(i),0);
+  const monthlyObl = state.investors.filter(i=>i.roiFrequency==='Monthly').reduce((s,i)=>s+monthlyAmount(i),0);
+  const yearlyObl = state.investors.filter(i=>i.roiFrequency==='Yearly').reduce((s,i)=>s+yearlyAmount(i),0);
   const feesPaid = state.students.filter(s=>s.feeStatus==='Paid').reduce((s,x)=>s+x.fee,0);
   const feesPending = state.students.filter(s=>s.feeStatus!=='Paid').reduce((s,x)=>s+x.fee,0);
 
@@ -673,8 +699,12 @@ function renderInvestors(){
     <tr>
       <td>${inv.name}<div style="color:var(--text-dim);font-size:11px;">${inv.email||''}</div></td>
       <td class="mono">${fmtINR(inv.principal)}</td>
-      <td class="mono">${inv.roiPercent}%</td>
-      <td><span class="tag ${inv.frequency==='Monthly'?'teal':'gold'}">${inv.frequency}</span></td>
+      <td class="mono">${inv.roiMonthlyPercent || 0}%</td>
+      <td class="mono">${inv.roiYearlyPercent || 0}%</td>
+      <td><span class="tag ${inv.roiFrequency==='Monthly'?'teal':'gold'}">${inv.roiFrequency}</span></td>
+      <td class="mono">${inv.investmentDate || '—'}</td>
+      <td class="mono">${inv.lockInMonths || 0} mo</td>
+      <td class="mono">${investmentEndDate(inv) || '—'}</td>
       <td class="mono">${fmtINR(suggestedPayout(inv))}</td>
       <td class="mono">${inv.payoutHistory.length ? inv.payoutHistory[0].date : '—'}</td>
       <td>
@@ -692,17 +722,17 @@ function renderInvestors(){
     <div class="page-header">
       <div>
         <div class="page-title">Invest &amp; Earn</div>
-        <div class="page-sub">Principal, ROI and payout tracking per investor.</div>
+        <div class="page-sub">Principal, ROI, lock-in and payout tracking per investor.</div>
       </div>
       <button class="btn btn-primary" data-action="add-investor" style="width:auto;">+ Add Investor</button>
     </div>
     <div class="panel">
       <table>
         <thead><tr>
-          <th>Investor</th><th>Principal</th><th>Annual ROI</th><th>Frequency</th>
-          <th>Next Payout Est.</th><th>Last Payout</th><th>Actions</th>
+          <th>Investor</th><th>Principal</th><th>Monthly ROI %</th><th>Yearly ROI %</th><th>Frequency</th>
+          <th>Investment Date</th><th>Lock-in</th><th>End Date</th><th>Payout Amount</th><th>Last Payout</th><th>Actions</th>
         </tr></thead>
-        <tbody>${rows || `<tr><td colspan="7"><div class="empty-state">No investors yet. Add your first one.</div></td></tr>`}</tbody>
+        <tbody>${rows || `<tr><td colspan="11"><div class="empty-state">No investors yet. Add your first one.</div></td></tr>`}</tbody>
       </table>
     </div>
   `;
@@ -797,10 +827,13 @@ function renderInvestorPortfolio(user){
       <div class="hero-label">Principal Invested</div>
       <div class="hero-value gold" style="color:var(--gold);">${fmtINR(inv.principal)}</div>
       <div class="hero-grid">
-        <div><div class="hero-label">Annual ROI</div><div class="hero-value">${inv.roiPercent}%</div></div>
-        <div><div class="hero-label">Payout Frequency</div><div class="hero-value">${inv.frequency}</div></div>
-        <div><div class="hero-label">Est. Next Payout</div><div class="hero-value" style="color:var(--teal);">${fmtINR(suggestedPayout(inv))}</div></div>
-        <div><div class="hero-label">Member Since</div><div class="hero-value" style="font-size:16px;">${inv.joinDate}</div></div>
+        <div><div class="hero-label">Monthly ROI</div><div class="hero-value">${inv.roiMonthlyPercent || 0}%</div></div>
+        <div><div class="hero-label">Yearly ROI</div><div class="hero-value">${inv.roiYearlyPercent || 0}%</div></div>
+        <div><div class="hero-label">Payout Frequency</div><div class="hero-value">${inv.roiFrequency}</div></div>
+        <div><div class="hero-label">Est. Payout Amount</div><div class="hero-value" style="color:var(--teal);">${fmtINR(suggestedPayout(inv))}</div></div>
+        <div><div class="hero-label">Investment Date</div><div class="hero-value" style="font-size:16px;">${inv.investmentDate || '—'}</div></div>
+        <div><div class="hero-label">Lock-in Period</div><div class="hero-value" style="font-size:16px;">${inv.lockInMonths || 0} months</div></div>
+        <div><div class="hero-label">End Date</div><div class="hero-value" style="font-size:16px;">${investmentEndDate(inv) || '—'}</div></div>
       </div>
     </div>
     <div class="panel">
@@ -813,6 +846,7 @@ function renderInvestorPortfolio(user){
   `;
 }
 
+/* ---------------- Modals ---------------- */
 function renderModal(){
   if(!state.modal) return '';
   const {type, payload} = state.modal;
@@ -828,17 +862,27 @@ function renderModal(){
             <div class="field"><label>Email</label><input type="email" name="email" value="${inv?inv.email||'':''}"></div>
             <div class="field"><label>Phone</label><input name="phone" value="${inv?inv.phone||'':''}"></div>
           </div>
+          <div class="field"><label>Invested Amount (₹)</label><input type="number" step="0.01" name="principal" required value="${inv?inv.principal:''}"></div>
+
           <div class="field-row">
-            <div class="field"><label>Principal (₹)</label><input type="number" step="0.01" name="principal" required value="${inv?inv.principal:''}"></div>
-            <div class="field"><label>Annual ROI (%)</label><input type="number" step="0.01" name="roiPercent" required value="${inv?inv.roiPercent:''}"></div>
+            <div class="field"><label>Date of Investment</label><input type="date" name="investmentDate" required value="${inv?inv.investmentDate:todayStr()}"></div>
+            <div class="field"><label>Lock-in Period (months)</label><input type="number" step="1" min="0" name="lockInMonths" required value="${inv?inv.lockInMonths:''}"></div>
           </div>
+
           <div class="field">
-            <label>Payout Frequency</label>
-            <select name="frequency">
-              <option ${inv&&inv.frequency==='Monthly'?'selected':''}>Monthly</option>
-              <option ${inv&&inv.frequency==='Yearly'?'selected':''}>Yearly</option>
+            <label>ROI Asking For</label>
+            <select name="roiFrequency">
+              <option value="Monthly" ${inv&&inv.roiFrequency==='Monthly'?'selected':''}>Monthly</option>
+              <option value="Yearly" ${inv&&inv.roiFrequency==='Yearly'?'selected':''}>Yearly</option>
             </select>
           </div>
+          <div class="field-hint">Selecting <b>Monthly</b> uses the Monthly ROI % below to calculate the payout amount. Selecting <b>Yearly</b> uses the Yearly ROI % instead.</div>
+
+          <div class="field-row">
+            <div class="field"><label>ROI Monthly (%)</label><input type="number" step="0.01" name="roiMonthlyPercent" value="${inv?inv.roiMonthlyPercent||'':''}"></div>
+            <div class="field"><label>ROI Yearly (%)</label><input type="number" step="0.01" name="roiYearlyPercent" value="${inv?inv.roiYearlyPercent||'':''}"></div>
+          </div>
+
           ${!inv ? `
           <div class="field" style="display:flex;align-items:center;gap:8px;">
             <input type="checkbox" name="createLogin" id="createLogin" style="width:auto;">
@@ -932,6 +976,7 @@ function renderModal(){
   return '';
 }
 
+/* ---------------- Event binding ---------------- */
 function bindEvents(){
   const loginForm = document.getElementById('loginForm');
   if(loginForm) loginForm.addEventListener('submit', e => {
