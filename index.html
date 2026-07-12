@@ -353,6 +353,17 @@ tbody tr:hover{background:var(--surface-2);}
   font-family:var(--font-mono);
 }
 .field-hint b{color:var(--teal);}
+.date-dropdown-row{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:8px;}
+.date-dropdown-row select{
+  width:100%;
+  background:var(--bg);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:10px 8px;
+  border-radius:3px;
+  font-size:13px;
+  outline:none;
+}
 
 .tabs-bar{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
 .chip-btn{
@@ -419,7 +430,6 @@ let state = {
 const root = document.getElementById('root');
 const fmtINR = n => '₹' + Number(n||0).toLocaleString('en-IN', {maximumFractionDigits:0});
 const uid = () => 't' + Math.random().toString(36).slice(2,10);
-const todayStr = () => new Date().toISOString().slice(0,10);
 
 function storageGet(key){
   try{
@@ -451,12 +461,64 @@ function saveUsers(){ storageSet('users', state.users); }
 function saveInvestors(){ storageSet('investors', state.investors); }
 function saveStudents(){ storageSet('students', state.students); }
 
-/* ---------------- ROI / date calculations ---------------- */
+/* ---------------- Date helpers (local-time safe, no UTC drift) ---------------- */
+function toLocalISODate(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+const todayStr = () => toLocalISODate(new Date());
+function formatDMY(iso){
+  if(!iso) return '—';
+  const parts = iso.split('-');
+  if(parts.length!==3) return iso;
+  const [y,m,d] = parts;
+  return `${d}-${m}-${y}`;
+}
+
+/* Dropdown date picker: three <select> elements, DD-MM-YYYY */
+function dateDropdown(name, isoValue){
+  const parts = isoValue ? isoValue.split('-') : [];
+  const y = parts[0] || '';
+  const m = parts[1] || '';
+  const d = parts[2] || '';
+  const days = Array.from({length:31}, (_,i)=>String(i+1).padStart(2,'0'));
+  const months = [['01','Jan'],['02','Feb'],['03','Mar'],['04','Apr'],['05','May'],['06','Jun'],['07','Jul'],['08','Aug'],['09','Sep'],['10','Oct'],['11','Nov'],['12','Dec']];
+  const nowY = new Date().getFullYear();
+  const years = [];
+  for(let yy=nowY-6; yy<=nowY+10; yy++) years.push(String(yy));
+  return `
+    <div class="date-dropdown-row">
+      <select name="${name}_d" required>
+        <option value="">DD</option>
+        ${days.map(dd=>`<option value="${dd}" ${d===dd?'selected':''}>${dd}</option>`).join('')}
+      </select>
+      <select name="${name}_m" required>
+        <option value="">MM</option>
+        ${months.map(([mv,ml])=>`<option value="${mv}" ${m===mv?'selected':''}>${ml}</option>`).join('')}
+      </select>
+      <select name="${name}_y" required>
+        <option value="">YYYY</option>
+        ${years.map(yy=>`<option value="${yy}" ${y===yy?'selected':''}>${yy}</option>`).join('')}
+      </select>
+    </div>
+  `;
+}
+function readDateDropdown(form, name){
+  const d = form[name+'_d'].value;
+  const m = form[name+'_m'].value;
+  const y = form[name+'_y'].value;
+  if(!d || !m || !y) return '';
+  return `${y}-${m}-${d}`;
+}
+
+/* ---------------- ROI / due-date calculations ---------------- */
 function addMonths(dateStr, months){
   if(!dateStr) return '';
   const d = new Date(dateStr + 'T00:00:00');
   d.setMonth(d.getMonth() + Number(months || 0));
-  return d.toISOString().slice(0,10);
+  return toLocalISODate(d);
 }
 function investmentEndDate(inv){
   return addMonths(inv.investmentDate, inv.lockInMonths);
@@ -481,12 +543,11 @@ function firstSaturday(year, month){
 function nextMonthlyPayoutDate(){
   const now = new Date();
   let fs = firstSaturday(now.getFullYear(), now.getMonth());
-  fs.setHours(0,0,0,0);
   const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   if(fs < nowMid){
     fs = firstSaturday(now.getFullYear(), now.getMonth()+1);
   }
-  return fs.toISOString().slice(0,10);
+  return toLocalISODate(fs);
 }
 function anniversaryDueDate(dateStr){
   if(!dateStr) return '';
@@ -497,7 +558,7 @@ function anniversaryDueDate(dateStr){
   if(anniv < nowMid){
     anniv = new Date(now.getFullYear()+1, d.getMonth(), d.getDate());
   }
-  return anniv.toISOString().slice(0,10);
+  return toLocalISODate(anniv);
 }
 function nextDueDate(inv){
   return inv.roiFrequency === 'Monthly' ? nextMonthlyPayoutDate() : anniversaryDueDate(inv.investmentDate);
@@ -513,6 +574,9 @@ function isPaidThisYear(inv){
   const now = new Date();
   return inv.payoutHistory.some(p => new Date(p.date + 'T00:00:00').getFullYear()===now.getFullYear());
 }
+function isPaidCurrentPeriod(inv){
+  return inv.roiFrequency === 'Monthly' ? isPaidThisMonth(inv) : isPaidThisYear(inv);
+}
 function totalPaid(inv){
   return inv.payoutHistory.reduce((s,p)=>s+p.amount,0);
 }
@@ -521,6 +585,12 @@ function totalPaidAll(){
 }
 function totalPrincipalAll(){
   return state.investors.reduce((s,i)=>s+i.principal,0);
+}
+function monthlyPendingTotal(){
+  return state.investors.filter(i=>i.roiFrequency==='Monthly' && !isPaidThisMonth(i)).reduce((s,i)=>s+monthlyAmount(i),0);
+}
+function yearlyPendingTotal(){
+  return state.investors.filter(i=>i.roiFrequency==='Yearly' && !isPaidThisYear(i)).reduce((s,i)=>s+yearlyAmount(i),0);
 }
 
 /* ---------------- Auth actions ---------------- */
@@ -545,7 +615,7 @@ function submitInvestorForm(e, editId){
   const roiMonthlyPercent = parseFloat(f.roiMonthlyPercent.value) || 0;
   const roiYearlyPercent = parseFloat(f.roiYearlyPercent.value) || 0;
   const roiFrequency = f.roiFrequency.value;
-  const investmentDate = f.investmentDate.value;
+  const investmentDate = readDateDropdown(f, 'investmentDate');
   const lockInMonths = parseInt(f.lockInMonths.value, 10) || 0;
 
   if(editId){
@@ -581,7 +651,8 @@ function submitPayout(e, investorId){
   e.preventDefault();
   const f = e.target;
   const inv = state.investors.find(x => x.id === investorId);
-  inv.payoutHistory.push({date:f.date.value, amount: parseFloat(f.amount.value), note:f.note.value || ''});
+  const date = readDateDropdown(f, 'date');
+  inv.payoutHistory.push({date, amount: parseFloat(f.amount.value), note:f.note.value || ''});
   inv.payoutHistory.sort((a,b) => a.date < b.date ? 1 : -1);
   saveInvestors();
   closeModal();
@@ -729,6 +800,7 @@ function renderOverview(){
   const feesPaid = state.students.filter(s=>s.feeStatus==='Paid').reduce((s,x)=>s+x.fee,0);
   const feesPending = state.students.filter(s=>s.feeStatus!=='Paid').reduce((s,x)=>s+x.fee,0);
   const paidOut = totalPaidAll();
+  const pending = monthlyPendingTotal() + yearlyPendingTotal();
 
   const programCounts = PROGRAMS.map(p => ({
     program:p, count: state.students.filter(s=>s.program===p).length
@@ -744,8 +816,9 @@ function renderOverview(){
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-label">Total Investment Received</div><div class="stat-value gold">${fmtINR(totalPrincipal)}</div></div>
       <div class="stat-card"><div class="stat-label">Total Payouts Made</div><div class="stat-value teal">${fmtINR(paidOut)}</div></div>
-      <div class="stat-card"><div class="stat-label">Monthly Payout Due</div><div class="stat-value">${fmtINR(monthlyObl)}</div></div>
-      <div class="stat-card"><div class="stat-label">Yearly Payout Due</div><div class="stat-value">${fmtINR(yearlyObl)}</div></div>
+      <div class="stat-card"><div class="stat-label">Pending Payouts (Unpaid)</div><div class="stat-value red">${fmtINR(pending)}</div></div>
+      <div class="stat-card"><div class="stat-label">Monthly ROI Obligation</div><div class="stat-value">${fmtINR(monthlyObl)}</div></div>
+      <div class="stat-card"><div class="stat-label">Yearly ROI Obligation</div><div class="stat-value">${fmtINR(yearlyObl)}</div></div>
       <div class="stat-card"><div class="stat-label">Active Investors</div><div class="stat-value teal">${state.investors.length}</div></div>
       <div class="stat-card"><div class="stat-label">Students Enrolled</div><div class="stat-value teal">${state.students.length}</div></div>
       <div class="stat-card"><div class="stat-label">Fees Collected</div><div class="stat-value">${fmtINR(feesPaid)}</div></div>
@@ -765,20 +838,23 @@ function renderOverview(){
 }
 
 function renderInvestors(){
-  const rows = state.investors.map(inv => `
+  const rows = state.investors.map(inv => {
+    const periodPaid = isPaidCurrentPeriod(inv);
+    return `
     <tr>
       <td>${inv.name}<div style="color:var(--text-dim);font-size:11px;">${inv.email||''}</div></td>
       <td class="mono">${fmtINR(inv.principal)}</td>
       <td class="mono">${inv.roiMonthlyPercent || 0}%</td>
       <td class="mono">${inv.roiYearlyPercent || 0}%</td>
       <td><span class="tag ${inv.roiFrequency==='Monthly'?'teal':'gold'}">${inv.roiFrequency}</span></td>
-      <td class="mono">${inv.investmentDate || '—'}</td>
+      <td class="mono">${formatDMY(inv.investmentDate)}</td>
       <td class="mono">${inv.lockInMonths || 0} mo</td>
-      <td class="mono">${investmentEndDate(inv) || '—'}</td>
+      <td class="mono">${formatDMY(investmentEndDate(inv))}</td>
       <td class="mono">${fmtINR(suggestedPayout(inv))}</td>
-      <td class="mono">${nextDueDate(inv)}</td>
+      <td class="mono">${formatDMY(nextDueDate(inv))}</td>
+      <td><span class="tag ${periodPaid?'teal':'red'}">${periodPaid?'Paid':'Pending'}</span></td>
       <td class="mono">${fmtINR(totalPaid(inv))}</td>
-      <td class="mono">${inv.payoutHistory.length ? inv.payoutHistory[0].date : '—'}</td>
+      <td class="mono">${inv.payoutHistory.length ? formatDMY(inv.payoutHistory[0].date) : '—'}</td>
       <td>
         <div class="row-actions">
           <button class="btn btn-ghost btn-sm" data-action="pay" data-id="${inv.id}">Record payout</button>
@@ -787,8 +863,8 @@ function renderInvestors(){
           <button class="btn btn-ghost btn-sm" data-action="delete-investor" data-id="${inv.id}" style="color:var(--red);">Delete</button>
         </div>
       </td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 
   return `
     <div class="page-header">
@@ -802,9 +878,9 @@ function renderInvestors(){
       <table>
         <thead><tr>
           <th>Investor</th><th>Principal</th><th>Monthly ROI %</th><th>Yearly ROI %</th><th>Frequency</th>
-          <th>Investment Date</th><th>Lock-in</th><th>End Date</th><th>Payout Amount</th><th>Next Due Date</th><th>Total Paid</th><th>Last Payout</th><th>Actions</th>
+          <th>Investment Date</th><th>Lock-in</th><th>End Date</th><th>Payout Amount</th><th>Next Due Date</th><th>Current Period</th><th>Total Paid</th><th>Last Payout</th><th>Actions</th>
         </tr></thead>
-        <tbody>${rows || `<tr><td colspan="13"><div class="empty-state">No investors yet. Add your first one.</div></td></tr>`}</tbody>
+        <tbody>${rows || `<tr><td colspan="14"><div class="empty-state">No investors yet. Add your first one.</div></td></tr>`}</tbody>
       </table>
     </div>
   `;
@@ -820,12 +896,13 @@ function renderPayoutsDue(){
     <tr>
       <td>${inv.name}</td>
       <td class="mono">${fmtINR(monthlyAmount(inv))}</td>
-      <td class="mono">${nextMonthlyPayoutDate()}</td>
+      <td class="mono">${formatDMY(nextMonthlyPayoutDate())}</td>
       <td><span class="tag ${paid?'teal':'red'}">${paid?'Paid this month':'Unpaid'}</span></td>
       <td><button class="btn btn-ghost btn-sm" data-action="pay" data-id="${inv.id}">Record payout</button></td>
     </tr>`;
   }).join('');
   const monthlyTotal = monthlyInvestors.reduce((s,i)=>s+monthlyAmount(i),0);
+  const monthlyPending = monthlyPendingTotal();
 
   const yearlyRows = yearlyInvestors.map(inv => {
     const paid = isPaidThisYear(inv);
@@ -833,18 +910,19 @@ function renderPayoutsDue(){
     <tr>
       <td>${inv.name}</td>
       <td class="mono">${fmtINR(yearlyAmount(inv))}</td>
-      <td class="mono">${anniversaryDueDate(inv.investmentDate)}</td>
+      <td class="mono">${formatDMY(anniversaryDueDate(inv.investmentDate))}</td>
       <td><span class="tag ${paid?'teal':'red'}">${paid?'Paid this year':'Unpaid'}</span></td>
       <td><button class="btn btn-ghost btn-sm" data-action="pay" data-id="${inv.id}">Record payout</button></td>
     </tr>`;
   }).join('');
   const yearlyTotal = yearlyInvestors.reduce((s,i)=>s+yearlyAmount(i),0);
+  const yearlyPending = yearlyPendingTotal();
 
   return `
     <div class="page-header">
       <div>
         <div class="page-title">Payouts Due</div>
-        <div class="page-sub">What's owed this month and this year, per investor.</div>
+        <div class="page-sub">What's owed this month and this year, per investor — obligation vs. what's still pending.</div>
       </div>
     </div>
 
@@ -853,7 +931,10 @@ function renderPayoutsDue(){
       <table>
         <thead><tr><th>Investor</th><th>Amount</th><th>Due Date (1st Saturday)</th><th>Status</th><th></th></tr></thead>
         <tbody>${monthlyRows || `<tr><td colspan="5"><div class="empty-state">No Monthly ROI investors.</div></td></tr>`}</tbody>
-        ${monthlyInvestors.length ? `<tfoot><tr><td>Total</td><td class="mono">${fmtINR(monthlyTotal)}</td><td colspan="3"></td></tr></tfoot>` : ''}
+        ${monthlyInvestors.length ? `<tfoot>
+          <tr><td>Total Obligation</td><td class="mono">${fmtINR(monthlyTotal)}</td><td colspan="3"></td></tr>
+          <tr><td>Pending (Unpaid)</td><td class="mono" style="color:var(--red);">${fmtINR(monthlyPending)}</td><td colspan="3"></td></tr>
+        </tfoot>` : ''}
       </table>
     </div>
 
@@ -862,7 +943,10 @@ function renderPayoutsDue(){
       <table>
         <thead><tr><th>Investor</th><th>Amount</th><th>Due Date (Investment Anniversary)</th><th>Status</th><th></th></tr></thead>
         <tbody>${yearlyRows || `<tr><td colspan="5"><div class="empty-state">No Yearly ROI investors.</div></td></tr>`}</tbody>
-        ${yearlyInvestors.length ? `<tfoot><tr><td>Total</td><td class="mono">${fmtINR(yearlyTotal)}</td><td colspan="3"></td></tr></tfoot>` : ''}
+        ${yearlyInvestors.length ? `<tfoot>
+          <tr><td>Total Obligation</td><td class="mono">${fmtINR(yearlyTotal)}</td><td colspan="3"></td></tr>
+          <tr><td>Pending (Unpaid)</td><td class="mono" style="color:var(--red);">${fmtINR(yearlyPending)}</td><td colspan="3"></td></tr>
+        </tfoot>` : ''}
       </table>
     </div>
   `;
@@ -879,7 +963,7 @@ function renderStudents(){
       <td>${st.program}</td>
       <td class="mono">${fmtINR(st.fee)}</td>
       <td><span class="tag ${st.feeStatus==='Paid'?'teal':st.feeStatus==='Partial'?'gold':'red'}">${st.feeStatus}</span></td>
-      <td class="mono">${st.enrollDate}</td>
+      <td class="mono">${formatDMY(st.enrollDate)}</td>
       <td>
         <div class="row-actions">
           <button class="btn btn-ghost btn-sm" data-action="edit-student" data-id="${st.id}">Edit</button>
@@ -943,8 +1027,9 @@ function renderInvestorPortfolio(user){
     return `<div class="page-header"><div class="page-title">My Portfolio</div></div><div class="empty-state">No investment record is linked to this login yet. Please contact the academy.</div>`;
   }
   const historyRows = inv.payoutHistory.map(p => `
-    <tr><td class="mono">${p.date}</td><td class="mono">${fmtINR(p.amount)}</td><td>${p.note||'—'}</td></tr>
+    <tr><td class="mono">${formatDMY(p.date)}</td><td class="mono">${fmtINR(p.amount)}</td><td>${p.note||'—'}</td></tr>
   `).join('');
+  const periodPaid = isPaidCurrentPeriod(inv);
 
   return `
     <div class="page-header">
@@ -961,11 +1046,12 @@ function renderInvestorPortfolio(user){
         <div><div class="hero-label">Yearly ROI</div><div class="hero-value">${inv.roiYearlyPercent || 0}%</div></div>
         <div><div class="hero-label">Payout Frequency</div><div class="hero-value">${inv.roiFrequency}</div></div>
         <div><div class="hero-label">Est. Payout Amount</div><div class="hero-value" style="color:var(--teal);">${fmtINR(suggestedPayout(inv))}</div></div>
-        <div><div class="hero-label">Next Due Date</div><div class="hero-value" style="font-size:16px;">${nextDueDate(inv)}</div></div>
+        <div><div class="hero-label">Next Due Date</div><div class="hero-value" style="font-size:16px;">${formatDMY(nextDueDate(inv))}</div></div>
+        <div><div class="hero-label">This Period</div><div class="hero-value" style="font-size:16px;color:${periodPaid?'var(--teal)':'var(--red)'};">${periodPaid?'Paid':'Pending'}</div></div>
         <div><div class="hero-label">Total Paid So Far</div><div class="hero-value" style="font-size:16px;color:var(--teal);">${fmtINR(totalPaid(inv))}</div></div>
-        <div><div class="hero-label">Investment Date</div><div class="hero-value" style="font-size:16px;">${inv.investmentDate || '—'}</div></div>
+        <div><div class="hero-label">Investment Date</div><div class="hero-value" style="font-size:16px;">${formatDMY(inv.investmentDate)}</div></div>
         <div><div class="hero-label">Lock-in Period</div><div class="hero-value" style="font-size:16px;">${inv.lockInMonths || 0} months</div></div>
-        <div><div class="hero-label">End Date</div><div class="hero-value" style="font-size:16px;">${investmentEndDate(inv) || '—'}</div></div>
+        <div><div class="hero-label">End Date</div><div class="hero-value" style="font-size:16px;">${formatDMY(investmentEndDate(inv))}</div></div>
       </div>
     </div>
     <div class="panel">
@@ -996,10 +1082,11 @@ function renderModal(){
           </div>
           <div class="field"><label>Invested Amount (₹)</label><input type="number" step="0.01" name="principal" required value="${inv?inv.principal:''}"></div>
 
-          <div class="field-row">
-            <div class="field"><label>Date of Investment</label><input type="date" name="investmentDate" required value="${inv?inv.investmentDate:todayStr()}"></div>
-            <div class="field"><label>Lock-in Period (months)</label><input type="number" step="1" min="0" name="lockInMonths" required value="${inv?inv.lockInMonths:''}"></div>
+          <div class="field">
+            <label>Date of Investment (DD-MM-YYYY)</label>
+            ${dateDropdown('investmentDate', inv?inv.investmentDate:todayStr())}
           </div>
+          <div class="field"><label>Lock-in Period (months)</label><input type="number" step="1" min="0" name="lockInMonths" required value="${inv?inv.lockInMonths:''}"></div>
 
           <div class="field">
             <label>ROI Asking For</label>
@@ -1041,11 +1128,12 @@ function renderModal(){
       <div class="modal-backdrop open"><div class="modal">
         <h3>Record Payout — ${inv.name}</h3>
         <form id="payoutForm">
-          <div class="field-row">
-            <div class="field"><label>Date</label><input type="date" name="date" value="${defaultDate}" required></div>
-            <div class="field"><label>Amount (₹)</label><input type="number" step="0.01" name="amount" value="${suggestedPayout(inv).toFixed(2)}" required></div>
+          <div class="field">
+            <label>Date (DD-MM-YYYY)</label>
+            ${dateDropdown('date', defaultDate)}
           </div>
-          ${inv.roiFrequency === 'Monthly' ? `<div class="field-hint">Date auto-filled to the 1st Saturday of the month — <b>${defaultDate}</b>. Edit if you paid on a different day.</div>` : ''}
+          ${inv.roiFrequency === 'Monthly' ? `<div class="field-hint">Auto-suggested to the 1st Saturday of the month — <b>${formatDMY(defaultDate)}</b>. Change if you paid on a different day.</div>` : ''}
+          <div class="field"><label>Amount (₹)</label><input type="number" step="0.01" name="amount" value="${suggestedPayout(inv).toFixed(2)}" required></div>
           <div class="field"><label>Note</label><input name="note" placeholder="e.g. July payout"></div>
           <div class="modal-actions">
             <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
@@ -1060,7 +1148,7 @@ function renderModal(){
     const inv = state.investors.find(x=>x.id===payload.id);
     const rows = inv.payoutHistory.map((p,idx) => `
       <tr>
-        <td class="mono">${p.date}</td>
+        <td class="mono">${formatDMY(p.date)}</td>
         <td class="mono">${fmtINR(p.amount)}</td>
         <td>${p.note||'—'}</td>
         <td><button class="btn btn-ghost btn-sm" data-action="delete-payout" data-id="${inv.id}" data-idx="${idx}" style="color:var(--red);">Delete</button></td>
@@ -1150,8 +1238,9 @@ function bindEvents(){
   }));
   document.querySelectorAll('[data-action="delete-payout"]').forEach(el => el.addEventListener('click', () => {
     if(confirm('Delete this payout record? This cannot be undone.')){
-      deletePayout(el.getAttribute('data-id'), parseInt(el.getAttribute('data-idx'),10));
-      openModal('history', {id: el.getAttribute('data-id')});
+      const invId = el.getAttribute('data-id');
+      deletePayout(invId, parseInt(el.getAttribute('data-idx'),10));
+      openModal('history', {id: invId});
     }
   }));
 
