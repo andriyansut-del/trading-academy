@@ -7,407 +7,114 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 :root{
-  --bg:#0B1220;
-  --surface:#111A2E;
-  --surface-2:#182440;
-  --border:#26314C;
-  --text:#E7ECF5;
-  --text-dim:#8A96AE;
-  --gold:#D4A64B;
-  --gold-dim:#8A7139;
-  --teal:#2AD9A3;
-  --red:#E8636B;
-  --font-display:'Space Grotesk',sans-serif;
-  --font-body:'Inter',sans-serif;
-  --font-mono:'IBM Plex Mono',monospace;
+  --bg:#0B1220; --surface:#111A2E; --surface-2:#182440; --border:#26314C;
+  --text:#E7ECF5; --text-dim:#8A96AE; --gold:#D4A64B; --gold-dim:#8A7139;
+  --teal:#2AD9A3; --red:#E8636B;
+  --font-display:'Space Grotesk',sans-serif; --font-body:'Inter',sans-serif; --font-mono:'IBM Plex Mono',monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{
-  font-family:var(--font-body);
-  background:var(--bg);
-  color:var(--text);
-  min-height:100vh;
-  -webkit-font-smoothing:antialiased;
-}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
 ::selection{background:var(--gold);color:#0B1220;}
 button{font-family:inherit;cursor:pointer;}
 input,select{font-family:inherit;}
 
-.ticker-wrap{
-  overflow:hidden;
-  background:var(--surface-2);
-  border-bottom:1px solid var(--border);
-  white-space:nowrap;
-  padding:7px 0;
-}
-.ticker-track{
-  display:inline-block;
-  font-family:var(--font-mono);
-  font-size:12px;
-  letter-spacing:.03em;
-  color:var(--gold);
-  animation:ticker 28s linear infinite;
-}
+.ticker-wrap{overflow:hidden;background:var(--surface-2);border-bottom:1px solid var(--border);white-space:nowrap;padding:7px 0;}
+.ticker-track{display:inline-block;font-family:var(--font-mono);font-size:12px;letter-spacing:.03em;color:var(--gold);animation:ticker 28s linear infinite;}
 .ticker-track span{margin-right:36px;color:var(--text-dim);}
 .ticker-track span b{color:var(--teal);font-weight:600;}
-@keyframes ticker{
-  0%{transform:translateX(0);}
-  100%{transform:translateX(-50%);}
-}
+@keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
 @media (prefers-reduced-motion: reduce){.ticker-track{animation:none;}}
 
-.login-screen{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:24px;
-  background:
-    radial-gradient(circle at 20% 15%, rgba(212,166,75,0.07), transparent 45%),
-    radial-gradient(circle at 80% 85%, rgba(42,217,163,0.06), transparent 45%),
-    var(--bg);
-}
-.login-card{
-  width:100%;
-  max-width:400px;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:4px;
-  padding:36px 32px 30px;
-  position:relative;
-}
-.login-card::before{
-  content:'';
-  position:absolute;
-  top:0;left:0;right:0;
-  height:2px;
-  background:linear-gradient(90deg,var(--gold),var(--teal));
-}
-.brand-eyebrow{
-  font-family:var(--font-mono);
-  font-size:11px;
-  letter-spacing:.15em;
-  color:var(--gold);
-  text-transform:uppercase;
-}
-.brand-title{
-  font-family:var(--font-display);
-  font-size:26px;
-  font-weight:700;
-  margin-top:6px;
-  letter-spacing:-0.01em;
-}
-.brand-sub{
-  color:var(--text-dim);
-  font-size:13px;
-  margin-top:8px;
-  margin-bottom:28px;
-}
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:radial-gradient(circle at 20% 15%, rgba(212,166,75,0.07), transparent 45%),radial-gradient(circle at 80% 85%, rgba(42,217,163,0.06), transparent 45%),var(--bg);}
+.login-card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:36px 32px 30px;position:relative;}
+.login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--teal));}
+.brand-eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;}
+.brand-title{font-family:var(--font-display);font-size:26px;font-weight:700;margin-top:6px;letter-spacing:-0.01em;}
+.brand-sub{color:var(--text-dim);font-size:13px;margin-top:8px;margin-bottom:28px;}
 .field{margin-bottom:16px;}
-.field label{
-  display:block;
-  font-size:11px;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  color:var(--text-dim);
-  margin-bottom:6px;
-}
-.field input, .field select{
-  width:100%;
-  background:var(--bg);
-  border:1px solid var(--border);
-  color:var(--text);
-  padding:10px 12px;
-  border-radius:3px;
-  font-size:14px;
-  outline:none;
-  transition:border-color .15s;
-}
+.field label{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;}
+.field input, .field select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:3px;font-size:14px;outline:none;transition:border-color .15s;}
+.field input[type=file]{padding:8px;font-size:12px;}
 .field input:focus, .field select:focus{border-color:var(--gold);}
-.btn{
-  border:none;
-  border-radius:3px;
-  padding:11px 18px;
-  font-size:13px;
-  font-weight:600;
-  letter-spacing:.02em;
-}
-.btn-primary{
-  background:var(--gold);
-  color:#131209;
-  width:100%;
-}
+.btn{border:none;border-radius:3px;padding:11px 18px;font-size:13px;font-weight:600;letter-spacing:.02em;}
+.btn-primary{background:var(--gold);color:#131209;width:100%;}
 .btn-primary:hover{background:#e0b45a;}
 .btn-primary:disabled{opacity:0.6;cursor:not-allowed;}
-.btn-ghost{
-  background:transparent;
-  border:1px solid var(--border);
-  color:var(--text);
-}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);}
 .btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
 .btn-sm{padding:6px 12px;font-size:12px;}
-.login-error{
-  background:rgba(232,99,107,0.1);
-  border:1px solid rgba(232,99,107,0.3);
-  color:var(--red);
-  font-size:12px;
-  padding:8px 10px;
-  border-radius:3px;
-  margin-bottom:16px;
-}
-.demo-note{
-  margin-top:22px;
-  padding-top:18px;
-  border-top:1px dashed var(--border);
-  font-family:var(--font-mono);
-  font-size:11px;
-  color:var(--text-dim);
-  line-height:1.7;
-}
+.login-error{background:rgba(232,99,107,0.1);border:1px solid rgba(232,99,107,0.3);color:var(--red);font-size:12px;padding:8px 10px;border-radius:3px;margin-bottom:16px;}
+.demo-note{margin-top:22px;padding-top:18px;border-top:1px dashed var(--border);font-family:var(--font-mono);font-size:11px;color:var(--text-dim);line-height:1.7;}
 .demo-note b{color:var(--teal);}
 
 .app{display:flex;min-height:calc(100vh - 33px);}
-.sidebar{
-  width:216px;
-  background:var(--surface);
-  border-right:1px solid var(--border);
-  padding:22px 14px;
-  display:flex;
-  flex-direction:column;
-}
-.side-brand{
-  font-family:var(--font-display);
-  font-weight:700;
-  font-size:15px;
-  padding:0 8px 22px;
-  border-bottom:1px solid var(--border);
-  margin-bottom:14px;
-  line-height:1.35;
-}
-.side-brand small{
-  display:block;
-  font-family:var(--font-mono);
-  color:var(--gold);
-  font-weight:400;
-  font-size:10px;
-  letter-spacing:.12em;
-  margin-top:4px;
-}
-.nav-item{
-  display:flex;
-  align-items:center;
-  gap:9px;
-  padding:10px 12px;
-  border-radius:3px;
-  font-size:13px;
-  color:var(--text-dim);
-  cursor:pointer;
-  margin-bottom:2px;
-  border-left:2px solid transparent;
-}
+.sidebar{width:216px;background:var(--surface);border-right:1px solid var(--border);padding:22px 14px;display:flex;flex-direction:column;}
+.side-brand{font-family:var(--font-display);font-weight:700;font-size:15px;padding:0 8px 22px;border-bottom:1px solid var(--border);margin-bottom:14px;line-height:1.35;}
+.side-brand small{display:block;font-family:var(--font-mono);color:var(--gold);font-weight:400;font-size:10px;letter-spacing:.12em;margin-top:4px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:3px;font-size:13px;color:var(--text-dim);cursor:pointer;margin-bottom:2px;border-left:2px solid transparent;}
 .nav-item:hover{color:var(--text);background:var(--surface-2);}
-.nav-item.active{
-  color:var(--gold);
-  background:var(--surface-2);
-  border-left:2px solid var(--gold);
-}
-.sidebar-footer{
-  margin-top:auto;
-  padding-top:14px;
-  border-top:1px solid var(--border);
-}
-.user-chip{
-  font-size:12px;
-  color:var(--text-dim);
-  margin-bottom:10px;
-}
+.nav-item.active{color:var(--gold);background:var(--surface-2);border-left:2px solid var(--gold);}
+.sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid var(--border);}
+.user-chip{font-size:12px;color:var(--text-dim);margin-bottom:10px;}
 .user-chip b{color:var(--text);display:block;font-size:13px;}
 
 .main{flex:1;padding:28px 34px;overflow-x:auto;}
-.page-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-end;
-  margin-bottom:22px;
-}
+.page-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
 .page-title{font-family:var(--font-display);font-size:21px;font-weight:700;}
 .page-sub{color:var(--text-dim);font-size:12.5px;margin-top:4px;}
 
-.stat-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:14px;
-  margin-bottom:26px;
-}
-.stat-card{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:4px;
-  padding:16px 18px;
-}
-.stat-label{
-  font-size:10.5px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--text-dim);
-}
-.stat-value{
-  font-family:var(--font-mono);
-  font-size:21px;
-  font-weight:600;
-  margin-top:8px;
-  color:var(--text);
-}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:26px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:16px 18px;}
+.stat-label{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);}
+.stat-value{font-family:var(--font-mono);font-size:21px;font-weight:600;margin-top:8px;color:var(--text);}
 .stat-value.gold{color:var(--gold);}
 .stat-value.teal{color:var(--teal);}
 .stat-value.red{color:var(--red);}
 
-.panel{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:4px;
-  overflow:hidden;
-  margin-bottom:22px;
-}
-.panel-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:14px 18px;
-  border-bottom:1px solid var(--border);
-}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:22px;}
+.panel-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;}
 .panel-head h3{font-family:var(--font-display);font-size:14.5px;font-weight:600;}
 
 table{width:100%;border-collapse:collapse;}
-th{
-  text-align:left;
-  font-size:10.5px;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  color:var(--text-dim);
-  padding:10px 18px;
-  border-bottom:1px solid var(--border);
-  white-space:nowrap;
-}
-td{
-  padding:11px 18px;
-  font-size:13px;
-  border-bottom:1px solid var(--border);
-  white-space:nowrap;
-}
-tfoot td{
-  font-weight:600;
-  border-bottom:none;
-  border-top:1px solid var(--border);
-  background:var(--surface-2);
-}
+th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);padding:10px 18px;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:11px 18px;font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;}
+tfoot td{font-weight:600;border-bottom:none;border-top:1px solid var(--border);background:var(--surface-2);}
 tr:last-child td{border-bottom:none;}
 tbody tr:hover{background:var(--surface-2);}
 .mono{font-family:var(--font-mono);}
-.tag{
-  display:inline-block;
-  padding:3px 8px;
-  border-radius:10px;
-  font-size:10.5px;
-  font-family:var(--font-mono);
-  letter-spacing:.03em;
-}
+.tag{display:inline-block;padding:3px 8px;border-radius:10px;font-size:10.5px;font-family:var(--font-mono);letter-spacing:.03em;}
 .tag.teal{background:rgba(42,217,163,0.12);color:var(--teal);}
 .tag.gold{background:rgba(212,166,75,0.12);color:var(--gold);}
 .tag.red{background:rgba(232,99,107,0.12);color:var(--red);}
-.row-actions{display:flex;gap:6px;}
-.empty-state{
-  padding:40px 20px;
-  text-align:center;
-  color:var(--text-dim);
-  font-size:13px;
-}
-.sticky-col{
-  position:sticky;
-  right:0;
-  background:var(--surface);
-  box-shadow:-6px 0 8px -6px rgba(0,0,0,0.5);
-  z-index:2;
-}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.empty-state{padding:40px 20px;text-align:center;color:var(--text-dim);font-size:13px;}
+.sticky-col{position:sticky;right:0;background:var(--surface);box-shadow:-6px 0 8px -6px rgba(0,0,0,0.5);z-index:2;}
 tbody tr:hover .sticky-col{background:var(--surface-2);}
 thead .sticky-col{background:var(--surface);z-index:3;}
 
-.modal-backdrop{
-  position:fixed;inset:0;
-  background:rgba(6,9,17,0.72);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:50;
-  padding:20px;
-}
+.modal-backdrop{position:fixed;inset:0;background:rgba(6,9,17,0.72);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
 .modal-backdrop.open{display:flex;}
-.modal{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:4px;
-  width:100%;
-  max-width:480px;
-  max-height:88vh;
-  overflow-y:auto;
-  padding:24px;
-}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:4px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:24px;}
 .modal h3{font-family:var(--font-display);font-size:16px;margin-bottom:18px;}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.field-hint{
-  font-size:11px;
-  color:var(--text-dim);
-  margin-top:-10px;
-  margin-bottom:16px;
-  font-family:var(--font-mono);
-}
+.field-hint{font-size:11px;color:var(--text-dim);margin-top:-10px;margin-bottom:16px;font-family:var(--font-mono);}
 .field-hint b{color:var(--teal);}
 .date-dropdown-row{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:8px;}
-.date-dropdown-row select{
-  width:100%;
-  background:var(--bg);
-  border:1px solid var(--border);
-  color:var(--text);
-  padding:10px 8px;
-  border-radius:3px;
-  font-size:13px;
-  outline:none;
-}
+.date-dropdown-row select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 8px;border-radius:3px;font-size:13px;outline:none;}
 
 .tabs-bar{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
-.chip-btn{
-  background:var(--surface);
-  border:1px solid var(--border);
-  color:var(--text-dim);
-  padding:7px 13px;
-  border-radius:16px;
-  font-size:12px;
-}
+.chip-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-dim);padding:7px 13px;border-radius:16px;font-size:12px;}
 .chip-btn.active{border-color:var(--gold);color:var(--gold);}
 
-.portfolio-hero{
-  background:linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
-  border:1px solid var(--border);
-  border-radius:4px;
-  padding:26px;
-  margin-bottom:22px;
-  position:relative;
-  overflow:hidden;
-}
-.portfolio-hero::after{
-  content:'';
-  position:absolute;top:0;right:0;bottom:0;width:3px;
-  background:linear-gradient(180deg,var(--gold),var(--teal));
-}
+.portfolio-hero{background:linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);border:1px solid var(--border);border-radius:4px;padding:26px;margin-bottom:22px;position:relative;overflow:hidden;}
+.portfolio-hero::after{content:'';position:absolute;top:0;right:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--gold),var(--teal));}
 .hero-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:22px;margin-top:18px;}
 .hero-label{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);}
 .hero-value{font-family:var(--font-mono);font-size:24px;font-weight:600;margin-top:8px;}
 
-.top-bar{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:12px 34px;border-bottom:1px solid var(--border);background:var(--surface);
-}
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 34px;border-bottom:1px solid var(--border);background:var(--surface);}
 .logout-link{font-size:12px;color:var(--text-dim);border:1px solid var(--border);padding:6px 12px;border-radius:3px;}
 .logout-link:hover{color:var(--red);border-color:var(--red);background:transparent;}
 
@@ -423,6 +130,7 @@ thead .sticky-col{background:var(--surface);z-index:3;}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
 <script>
 /* ================= Firebase init ================= */
@@ -438,32 +146,31 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
+const storage = firebase.storage();
 
 const PROGRAMS = ["Intraday Trading","Option Trading","Swing Trading","Commodity Trading","Investment Trading","Crypto Trading","Forex Trading"];
 const FEE_STATUSES = ["Paid","Pending","Partial"];
+const TERM_LABELS = {1:'1st Term',2:'2nd Term',3:'3rd Term',4:'4th Term',5:'5th Term'};
 
 let state = {
   ready:false,
-  currentUser:null,      // {uid, email, role, name, investorId}
+  currentUser:null,
   investors:[],
   students:[],
-  allUsers:[],            // admin only: list of {uid, role, name, email, investorId}
+  allUsers:[],
   adminTab:'overview',
   studentProgramFilter:'All',
   modal:null,
-  loginError:'',
-  actionError:''
+  loginError:''
 };
 
 const root = document.getElementById('root');
 const fmtINR = n => '₹' + Number(n||0).toLocaleString('en-IN', {maximumFractionDigits:0});
 const uid = () => 't' + Math.random().toString(36).slice(2,10);
 
-/* ---------------- Date helpers (local-time safe, no UTC drift) ---------------- */
+/* ---------------- Date helpers ---------------- */
 function toLocalISODate(d){
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const day = String(d.getDate()).padStart(2,'0');
+  const y = d.getFullYear(); const m = String(d.getMonth()+1).padStart(2,'0'); const day = String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
 const todayStr = () => toLocalISODate(new Date());
@@ -474,12 +181,9 @@ function formatDMY(iso){
   const [y,m,d] = parts;
   return `${d}-${m}-${y}`;
 }
-
 function dateDropdown(name, isoValue){
   const parts = isoValue ? isoValue.split('-') : [];
-  const y = parts[0] || '';
-  const m = parts[1] || '';
-  const d = parts[2] || '';
+  const y = parts[0] || ''; const m = parts[1] || ''; const d = parts[2] || '';
   const days = Array.from({length:31}, (_,i)=>String(i+1).padStart(2,'0'));
   const months = [['01','Jan'],['02','Feb'],['03','Mar'],['04','Apr'],['05','May'],['06','Jun'],['07','Jul'],['08','Aug'],['09','Sep'],['10','Oct'],['11','Nov'],['12','Dec']];
   const nowY = new Date().getFullYear();
@@ -487,106 +191,82 @@ function dateDropdown(name, isoValue){
   for(let yy=nowY-6; yy<=nowY+10; yy++) years.push(String(yy));
   return `
     <div class="date-dropdown-row">
-      <select name="${name}_d" required>
-        <option value="">DD</option>
-        ${days.map(dd=>`<option value="${dd}" ${d===dd?'selected':''}>${dd}</option>`).join('')}
-      </select>
-      <select name="${name}_m" required>
-        <option value="">MM</option>
-        ${months.map(([mv,ml])=>`<option value="${mv}" ${m===mv?'selected':''}>${ml}</option>`).join('')}
-      </select>
-      <select name="${name}_y" required>
-        <option value="">YYYY</option>
-        ${years.map(yy=>`<option value="${yy}" ${y===yy?'selected':''}>${yy}</option>`).join('')}
-      </select>
-    </div>
-  `;
+      <select name="${name}_d" required><option value="">DD</option>${days.map(dd=>`<option value="${dd}" ${d===dd?'selected':''}>${dd}</option>`).join('')}</select>
+      <select name="${name}_m" required><option value="">MM</option>${months.map(([mv,ml])=>`<option value="${mv}" ${m===mv?'selected':''}>${ml}</option>`).join('')}</select>
+      <select name="${name}_y" required><option value="">YYYY</option>${years.map(yy=>`<option value="${yy}" ${y===yy?'selected':''}>${yy}</option>`).join('')}</select>
+    </div>`;
 }
 function readDateDropdown(form, name){
-  const d = form[name+'_d'].value;
-  const m = form[name+'_m'].value;
-  const y = form[name+'_y'].value;
+  const d = form[name+'_d'].value, m = form[name+'_m'].value, y = form[name+'_y'].value;
   if(!d || !m || !y) return '';
   return `${y}-${m}-${d}`;
 }
+function termDropdown(name, selected){
+  return `<select name="${name}" required>${[1,2,3,4,5].map(n=>`<option value="${n}" ${Number(selected)===n?'selected':''}>${TERM_LABELS[n]}</option>`).join('')}</select>`;
+}
 
-/* ---------------- ROI / due-date calculations ---------------- */
+/* ---------------- ROI / due-date calculations (operate on a "term" object) ---------------- */
 function addMonths(dateStr, months){
   if(!dateStr) return '';
   const d = new Date(dateStr + 'T00:00:00');
   d.setMonth(d.getMonth() + Number(months || 0));
   return toLocalISODate(d);
 }
-function investmentEndDate(inv){
-  return addMonths(inv.investmentDate, inv.lockInMonths);
-}
-function monthlyAmount(inv){
-  return inv.principal * (inv.roiMonthlyPercent || 0) / 100;
-}
-function yearlyAmount(inv){
-  return inv.principal * (inv.roiYearlyPercent || 0) / 100;
-}
-function suggestedPayout(inv){
-  return inv.roiFrequency === 'Monthly' ? monthlyAmount(inv) : yearlyAmount(inv);
-}
+function investmentEndDate(t){ return addMonths(t.investmentDate, t.lockInMonths); }
+function monthlyAmount(t){ return t.principal * (t.roiMonthlyPercent || 0) / 100; }
+function yearlyAmount(t){ return t.principal * (t.roiYearlyPercent || 0) / 100; }
+function suggestedPayout(t){ return t.roiFrequency === 'Monthly' ? monthlyAmount(t) : yearlyAmount(t); }
 function firstSaturday(year, month){
-  const d = new Date(year, month, 1);
-  const day = d.getDay();
-  const offset = (6 - day + 7) % 7;
-  d.setDate(1 + offset);
-  return d;
+  const d = new Date(year, month, 1); const day = d.getDay(); const offset = (6 - day + 7) % 7;
+  d.setDate(1 + offset); return d;
 }
 function nextMonthlyPayoutDate(){
   const now = new Date();
   let fs = firstSaturday(now.getFullYear(), now.getMonth());
   const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  if(fs < nowMid){
-    fs = firstSaturday(now.getFullYear(), now.getMonth()+1);
-  }
+  if(fs < nowMid){ fs = firstSaturday(now.getFullYear(), now.getMonth()+1); }
   return toLocalISODate(fs);
 }
 function anniversaryDueDate(dateStr){
   if(!dateStr) return '';
-  const d = new Date(dateStr + 'T00:00:00');
-  const now = new Date();
+  const d = new Date(dateStr + 'T00:00:00'); const now = new Date();
   const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   let anniv = new Date(now.getFullYear(), d.getMonth(), d.getDate());
-  if(anniv < nowMid){
-    anniv = new Date(now.getFullYear()+1, d.getMonth(), d.getDate());
-  }
+  if(anniv < nowMid){ anniv = new Date(now.getFullYear()+1, d.getMonth(), d.getDate()); }
   return toLocalISODate(anniv);
 }
-function nextDueDate(inv){
-  return inv.roiFrequency === 'Monthly' ? nextMonthlyPayoutDate() : anniversaryDueDate(inv.investmentDate);
-}
-function isPaidThisMonth(inv){
+function nextDueDate(t){ return t.roiFrequency === 'Monthly' ? nextMonthlyPayoutDate() : anniversaryDueDate(t.investmentDate); }
+function isPaidThisMonth(t){
   const now = new Date();
-  return inv.payoutHistory.some(p => {
-    const d = new Date(p.date + 'T00:00:00');
-    return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
-  });
+  return t.payoutHistory.some(p => { const d = new Date(p.date+'T00:00:00'); return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth(); });
 }
-function isPaidThisYear(inv){
+function isPaidThisYear(t){
   const now = new Date();
-  return inv.payoutHistory.some(p => new Date(p.date + 'T00:00:00').getFullYear()===now.getFullYear());
+  return t.payoutHistory.some(p => new Date(p.date+'T00:00:00').getFullYear()===now.getFullYear());
 }
-function isPaidCurrentPeriod(inv){
-  return inv.roiFrequency === 'Monthly' ? isPaidThisMonth(inv) : isPaidThisYear(inv);
-}
-function totalPaid(inv){
-  return inv.payoutHistory.reduce((s,p)=>s+p.amount,0);
-}
-function totalPaidAll(){
-  return state.investors.reduce((s,i)=>s+totalPaid(i),0);
-}
-function totalPrincipalAll(){
-  return state.investors.reduce((s,i)=>s+i.principal,0);
+function isPaidCurrentPeriod(t){ return t.roiFrequency === 'Monthly' ? isPaidThisMonth(t) : isPaidThisYear(t); }
+function totalPaid(t){ return t.payoutHistory.reduce((s,p)=>s+p.amount,0); }
+
+function investorTotalPrincipal(inv){ return inv.terms.reduce((s,t)=>s+t.principal,0); }
+function investorTotalPaid(inv){ return inv.terms.reduce((s,t)=>s+totalPaid(t),0); }
+function totalPrincipalAll(){ return state.investors.reduce((s,i)=>s+investorTotalPrincipal(i),0); }
+function totalPaidAll(){ return state.investors.reduce((s,i)=>s+investorTotalPaid(i),0); }
+function allTermsFlat(){
+  const out = [];
+  state.investors.forEach(inv => inv.terms.forEach(t => out.push({inv, term:t})));
+  return out;
 }
 function monthlyPendingTotal(){
-  return state.investors.filter(i=>i.roiFrequency==='Monthly' && !isPaidThisMonth(i)).reduce((s,i)=>s+monthlyAmount(i),0);
+  return allTermsFlat().filter(x=>x.term.roiFrequency==='Monthly' && !isPaidThisMonth(x.term)).reduce((s,x)=>s+monthlyAmount(x.term),0);
 }
 function yearlyPendingTotal(){
-  return state.investors.filter(i=>i.roiFrequency==='Yearly' && !isPaidThisYear(i)).reduce((s,i)=>s+yearlyAmount(i),0);
+  return allTermsFlat().filter(x=>x.term.roiFrequency==='Yearly' && !isPaidThisYear(x.term)).reduce((s,x)=>s+yearlyAmount(x.term),0);
+}
+function monthlyObligationTotal(){
+  return allTermsFlat().filter(x=>x.term.roiFrequency==='Monthly').reduce((s,x)=>s+monthlyAmount(x.term),0);
+}
+function yearlyObligationTotal(){
+  return allTermsFlat().filter(x=>x.term.roiFrequency==='Yearly').reduce((s,x)=>s+yearlyAmount(x.term),0);
 }
 
 /* ---------------- Firebase helpers ---------------- */
@@ -596,36 +276,38 @@ function sanitize(obj){
   return out;
 }
 function normalizeInvestor(raw){
-  return {...raw, payoutHistory: raw.payoutHistory ? Object.values(raw.payoutHistory) : []};
+  const termsObj = raw.terms || {};
+  const terms = Object.keys(termsObj).map(k => {
+    const t = termsObj[k];
+    return {...t, termKey:k, payoutHistory: t.payoutHistory ? Object.values(t.payoutHistory) : []};
+  }).sort((a,b)=>(a.termNumber||0)-(b.termNumber||0));
+  return {...raw, terms};
+}
+async function uploadFile(path, file){
+  const ref = storage.ref(path);
+  await ref.put(file);
+  const url = await ref.getDownloadURL();
+  return {url, name: file.name};
 }
 
 /* ---------------- Auth wiring ---------------- */
 let loadFlags = {investors:false, students:false};
-function checkAdminReady(){
-  if(loadFlags.investors && loadFlags.students){ state.ready = true; }
-  render();
-}
-
+function checkAdminReady(){ if(loadFlags.investors && loadFlags.students){ state.ready = true; } render(); }
 function detachAllListeners(){
-  db.ref('nta/investors').off();
-  db.ref('nta/students').off();
-  db.ref('nta/roles').off();
+  db.ref('nta/investors').off(); db.ref('nta/students').off(); db.ref('nta/roles').off();
 }
-
 function attachListeners(){
   if(state.currentUser.role === 'admin'){
     loadFlags = {investors:false, students:false};
     db.ref('nta/investors').on('value', snap => {
       const val = snap.val() || {};
       state.investors = Object.keys(val).map(k => normalizeInvestor(val[k]));
-      loadFlags.investors = true;
-      checkAdminReady();
+      loadFlags.investors = true; checkAdminReady();
     });
     db.ref('nta/students').on('value', snap => {
       const val = snap.val() || {};
       state.students = Object.keys(val).map(k => val[k]);
-      loadFlags.students = true;
-      checkAdminReady();
+      loadFlags.students = true; checkAdminReady();
     });
     db.ref('nta/roles').on('value', snap => {
       const val = snap.val() || {};
@@ -636,43 +318,22 @@ function attachListeners(){
     db.ref('nta/investors/'+state.currentUser.investorId).on('value', snap => {
       const val = snap.val();
       state.investors = val ? [normalizeInvestor(val)] : [];
-      state.ready = true;
-      render();
+      state.ready = true; render();
     });
-  } else {
-    state.ready = true;
-    render();
-  }
+  } else { state.ready = true; render(); }
 }
-
 auth.onAuthStateChanged(user => {
   detachAllListeners();
-  state.investors = [];
-  state.students = [];
-  state.allUsers = [];
-  state.actionError = '';
-
-  if(!user){
-    state.currentUser = null;
-    state.ready = true;
-    render();
-    return;
-  }
-
+  state.investors = []; state.students = []; state.allUsers = [];
+  if(!user){ state.currentUser = null; state.ready = true; render(); return; }
   db.ref('nta/roles/'+user.uid).once('value').then(snap => {
     const roleData = snap.val();
     if(!roleData){
       state.loginError = 'No role assigned to this account. Contact the academy admin.';
-      state.currentUser = null;
-      state.ready = true;
-      auth.signOut();
-      render();
-      return;
+      state.currentUser = null; state.ready = true; auth.signOut(); render(); return;
     }
     state.currentUser = {
-      uid: user.uid,
-      email: user.email,
-      role: roleData.role,
+      uid: user.uid, email: user.email, role: roleData.role,
       name: roleData.name || (roleData.role === 'admin' ? 'Academy Admin' : 'Investor'),
       investorId: roleData.investorId || null
     };
@@ -681,22 +342,14 @@ auth.onAuthStateChanged(user => {
     attachListeners();
   }).catch(err => {
     state.loginError = 'Error loading account role: ' + err.message;
-    state.currentUser = null;
-    state.ready = true;
-    render();
+    state.currentUser = null; state.ready = true; render();
   });
 });
-
 function tryLogin(email, password){
   state.loginError = '';
-  auth.signInWithEmailAndPassword(email, password).catch(err => {
-    state.loginError = 'Invalid email or password.';
-    render();
-  });
+  auth.signInWithEmailAndPassword(email, password).catch(() => { state.loginError = 'Invalid email or password.'; render(); });
 }
 function logout(){ auth.signOut(); }
-
-/* Create an investor login without logging the admin out */
 async function createInvestorLogin(email, password, investorId, name){
   const secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary_' + Date.now());
   try{
@@ -705,101 +358,167 @@ async function createInvestorLogin(email, password, investorId, name){
     await db.ref('nta/roles/'+newUid).set({role:'investor', investorId, name, email});
     await db.ref('nta/investors/'+investorId+'/authUid').set(newUid);
     await secondaryApp.auth().signOut();
-  } finally {
-    await secondaryApp.delete();
-  }
+  } finally { await secondaryApp.delete(); }
 }
 
 /* ---------------- Modals ---------------- */
 function openModal(type, payload){ state.modal = {type, payload: payload || {}}; render(); }
 function closeModal(){ state.modal = null; render(); }
 
-async function submitInvestorForm(e, editId){
+/* Add a brand-new investor with their first term */
+async function submitNewInvestorForm(e){
   e.preventDefault();
   const f = e.target;
-  const principal = parseFloat(f.principal.value);
-  const roiMonthlyPercent = parseFloat(f.roiMonthlyPercent.value) || 0;
-  const roiYearlyPercent = parseFloat(f.roiYearlyPercent.value) || 0;
-  const roiFrequency = f.roiFrequency.value;
-  const investmentDate = readDateDropdown(f, 'investmentDate');
-  const lockInMonths = parseInt(f.lockInMonths.value, 10) || 0;
   const submitBtn = f.querySelector('button[type="submit"]');
   if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
-
   try{
-    if(editId){
-      const existing = state.investors.find(x => x.id === editId);
-      const updated = {
-        ...existing,
-        name:f.name.value, email:f.email.value, phone:f.phone.value,
-        principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
-        investmentDate, lockInMonths
-      };
-      await db.ref('nta/investors/'+editId).set(sanitize(updated));
-    } else {
-      const id = uid();
-      const newInv = {
-        id, name:f.name.value, email:f.email.value, phone:f.phone.value,
-        principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
-        investmentDate, lockInMonths,
-        payoutHistory:[]
-      };
-      await db.ref('nta/investors/'+id).set(sanitize(newInv));
-      if(f.createLogin && f.createLogin.checked){
-        const loginEmail = f.loginEmail.value.trim();
-        const loginPassword = f.loginPassword.value.trim();
-        if(loginEmail && loginPassword){
-          try{
-            await createInvestorLogin(loginEmail, loginPassword, id, newInv.name);
-          }catch(err){
-            alert('Investor saved, but creating their login failed: ' + err.message);
-          }
-        }
+    const investorId = uid();
+    const termKey = uid();
+    const termNumber = parseInt(f.termNumber.value,10);
+    const principal = parseFloat(f.principal.value);
+    const roiMonthlyPercent = parseFloat(f.roiMonthlyPercent.value)||0;
+    const roiYearlyPercent = parseFloat(f.roiYearlyPercent.value)||0;
+    const roiFrequency = f.roiFrequency.value;
+    const investmentDate = readDateDropdown(f,'investmentDate');
+    const lockInMonths = parseInt(f.lockInMonths.value,10)||0;
+
+    let agreementFileUrl=null, agreementFileName=null;
+    if(f.agreementFile && f.agreementFile.files[0]){
+      const file = f.agreementFile.files[0];
+      const path = `nta/investors/${investorId}/terms/${termKey}/agreement_${Date.now()}_${file.name}`;
+      const res = await uploadFile(path, file);
+      agreementFileUrl = res.url; agreementFileName = res.name;
+    }
+
+    const newInv = {
+      id: investorId, name:f.name.value, email:f.email.value, phone:f.phone.value,
+      terms: { [termKey]: sanitize({
+        termKey, termNumber, principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
+        investmentDate, lockInMonths, agreementFileUrl, agreementFileName, payoutHistory: []
+      })}
+    };
+    await db.ref('nta/investors/'+investorId).set(sanitize(newInv));
+
+    if(f.createLogin && f.createLogin.checked){
+      const loginEmail = f.loginEmail.value.trim();
+      const loginPassword = f.loginPassword.value.trim();
+      if(loginEmail && loginPassword){
+        try{ await createInvestorLogin(loginEmail, loginPassword, investorId, newInv.name); }
+        catch(err){ alert('Investor saved, but creating login failed: ' + err.message); }
       }
     }
     closeModal();
   }catch(err){
     alert('Error saving investor: ' + err.message);
-    if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = editId?'Save changes':'Add investor'; }
+    if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = 'Add investor'; }
   }
 }
 
-async function submitPayout(e, investorId){
+async function submitEditInvestorInfo(e, investorId){
   e.preventDefault();
   const f = e.target;
-  const inv = state.investors.find(x => x.id === investorId);
-  const date = readDateDropdown(f, 'date');
-  const newHistory = [...inv.payoutHistory, {date, amount: parseFloat(f.amount.value), note:f.note.value || ''}];
-  newHistory.sort((a,b) => a.date < b.date ? 1 : -1);
   try{
-    await db.ref('nta/investors/'+investorId+'/payoutHistory').set(newHistory);
+    await db.ref('nta/investors/'+investorId).update(sanitize({name:f.name.value, email:f.email.value, phone:f.phone.value}));
+    closeModal();
+  }catch(err){ alert('Error saving investor info: ' + err.message); }
+}
+
+/* Add/edit a term for an existing investor */
+async function submitTermForm(e, investorId, termKey){
+  e.preventDefault();
+  const f = e.target;
+  const submitBtn = f.querySelector('button[type="submit"]');
+  if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
+  try{
+    const key = termKey || uid();
+    const inv = state.investors.find(x=>x.id===investorId);
+    const existingTerm = termKey ? inv.terms.find(t=>t.termKey===termKey) : null;
+
+    const termNumber = parseInt(f.termNumber.value,10);
+    const principal = parseFloat(f.principal.value);
+    const roiMonthlyPercent = parseFloat(f.roiMonthlyPercent.value)||0;
+    const roiYearlyPercent = parseFloat(f.roiYearlyPercent.value)||0;
+    const roiFrequency = f.roiFrequency.value;
+    const investmentDate = readDateDropdown(f,'investmentDate');
+    const lockInMonths = parseInt(f.lockInMonths.value,10)||0;
+
+    let agreementFileUrl = existingTerm ? existingTerm.agreementFileUrl : null;
+    let agreementFileName = existingTerm ? existingTerm.agreementFileName : null;
+    if(f.agreementFile && f.agreementFile.files[0]){
+      const file = f.agreementFile.files[0];
+      const path = `nta/investors/${investorId}/terms/${key}/agreement_${Date.now()}_${file.name}`;
+      const res = await uploadFile(path, file);
+      agreementFileUrl = res.url; agreementFileName = res.name;
+    }
+
+    const termData = {
+      termKey:key, termNumber, principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
+      investmentDate, lockInMonths, agreementFileUrl, agreementFileName,
+      payoutHistory: existingTerm ? existingTerm.payoutHistory : []
+    };
+    await db.ref(`nta/investors/${investorId}/terms/${key}`).set(sanitize(termData));
     closeModal();
   }catch(err){
-    alert('Error saving payout: ' + err.message);
+    alert('Error saving term: ' + err.message);
+    if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = termKey ? 'Save changes' : 'Add term'; }
   }
 }
 
-async function deletePayout(investorId, index){
-  const inv = state.investors.find(x => x.id === investorId);
-  if(!inv) return;
-  const newHistory = inv.payoutHistory.filter((_,i) => i!==index);
-  try{
-    await db.ref('nta/investors/'+investorId+'/payoutHistory').set(newHistory);
-  }catch(err){
-    alert('Error deleting payout: ' + err.message);
-  }
+async function deleteTerm(investorId, termKey){
+  try{ await db.ref(`nta/investors/${investorId}/terms/${termKey}`).remove(); }
+  catch(err){ alert('Error deleting term: ' + err.message); }
 }
 
 async function deleteInvestor(id){
   const inv = state.investors.find(x => x.id === id);
   try{
     await db.ref('nta/investors/'+id).remove();
-    if(inv && inv.authUid){
-      await db.ref('nta/roles/'+inv.authUid).remove();
+    if(inv && inv.authUid){ await db.ref('nta/roles/'+inv.authUid).remove(); }
+  }catch(err){ alert('Error deleting investor: ' + err.message); }
+}
+
+/* Record / edit a payout for a specific term */
+async function submitPayout(e, investorId, termKey, editIndex){
+  e.preventDefault();
+  const f = e.target;
+  const submitBtn = f.querySelector('button[type="submit"]');
+  if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
+  try{
+    const inv = state.investors.find(x => x.id === investorId);
+    const term = inv.terms.find(t => t.termKey === termKey);
+    const date = readDateDropdown(f, 'date');
+    const amount = parseFloat(f.amount.value);
+    const note = f.note.value || '';
+
+    let receiptUrl = (editIndex!=null && term.payoutHistory[editIndex]) ? term.payoutHistory[editIndex].receiptUrl : null;
+    let receiptFileName = (editIndex!=null && term.payoutHistory[editIndex]) ? term.payoutHistory[editIndex].receiptFileName : null;
+    if(f.receiptFile && f.receiptFile.files[0]){
+      const file = f.receiptFile.files[0];
+      const path = `nta/investors/${investorId}/terms/${termKey}/payouts/receipt_${Date.now()}_${file.name}`;
+      const res = await uploadFile(path, file);
+      receiptUrl = res.url; receiptFileName = res.name;
     }
+
+    let newHistory = [...term.payoutHistory];
+    const entry = sanitize({date, amount, note, receiptUrl, receiptFileName});
+    if(editIndex != null){ newHistory[editIndex] = entry; } else { newHistory.push(entry); }
+    newHistory.sort((a,b) => a.date < b.date ? 1 : -1);
+
+    await db.ref(`nta/investors/${investorId}/terms/${termKey}/payoutHistory`).set(newHistory);
+    closeModal();
   }catch(err){
-    alert('Error deleting investor: ' + err.message);
+    alert('Error saving payout: ' + err.message);
+    if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = editIndex!=null?'Save changes':'Save payout'; }
   }
+}
+
+async function deletePayout(investorId, termKey, index){
+  const inv = state.investors.find(x => x.id === investorId);
+  const term = inv.terms.find(t => t.termKey === termKey);
+  if(!term) return;
+  const newHistory = term.payoutHistory.filter((_,i) => i!==index);
+  try{ await db.ref(`nta/investors/${investorId}/terms/${termKey}/payoutHistory`).set(newHistory); }
+  catch(err){ alert('Error deleting payout: ' + err.message); }
 }
 
 async function submitStudentForm(e, editId){
@@ -808,39 +527,23 @@ async function submitStudentForm(e, editId){
   try{
     if(editId){
       const existing = state.students.find(x => x.id === editId);
-      const updated = {
-        ...existing,
-        name:f.name.value, email:f.email.value, phone:f.phone.value,
-        program:f.program.value, fee:parseFloat(f.fee.value), feeStatus:f.feeStatus.value
-      };
+      const updated = {...existing, name:f.name.value, email:f.email.value, phone:f.phone.value, program:f.program.value, fee:parseFloat(f.fee.value), feeStatus:f.feeStatus.value};
       await db.ref('nta/students/'+editId).set(sanitize(updated));
     } else {
       const id = uid();
-      const newSt = {
-        id, name:f.name.value, email:f.email.value, phone:f.phone.value,
-        program:f.program.value, fee:parseFloat(f.fee.value), feeStatus:f.feeStatus.value,
-        enrollDate: todayStr()
-      };
+      const newSt = {id, name:f.name.value, email:f.email.value, phone:f.phone.value, program:f.program.value, fee:parseFloat(f.fee.value), feeStatus:f.feeStatus.value, enrollDate: todayStr()};
       await db.ref('nta/students/'+id).set(sanitize(newSt));
     }
     closeModal();
-  }catch(err){
-    alert('Error saving student: ' + err.message);
-  }
+  }catch(err){ alert('Error saving student: ' + err.message); }
 }
 async function deleteStudent(id){
-  try{
-    await db.ref('nta/students/'+id).remove();
-  }catch(err){
-    alert('Error deleting student: ' + err.message);
-  }
+  try{ await db.ref('nta/students/'+id).remove(); }
+  catch(err){ alert('Error deleting student: ' + err.message); }
 }
 async function deleteUserAccess(targetUid){
-  try{
-    await db.ref('nta/roles/'+targetUid).remove();
-  }catch(err){
-    alert('Error removing login: ' + err.message);
-  }
+  try{ await db.ref('nta/roles/'+targetUid).remove(); }
+  catch(err){ alert('Error removing login: ' + err.message); }
 }
 
 /* ================= RENDER ================= */
@@ -852,14 +555,13 @@ function render(){
 
 function renderTicker(){
   const totalPrincipal = totalPrincipalAll();
-  const monthlyObl = state.investors.filter(i=>i.roiFrequency==='Monthly').reduce((s,i)=>s+monthlyAmount(i),0);
+  const monthlyObl = monthlyObligationTotal();
   const items = `
     <span>TOTAL AUM <b>${fmtINR(totalPrincipal)}</b></span>
     <span>ACTIVE INVESTORS <b>${state.investors.length}</b></span>
     <span>MONTHLY PAYOUT OBLIGATION <b>${fmtINR(monthlyObl)}</b></span>
     <span>STUDENTS ENROLLED <b>${state.students.length}</b></span>
-    <span>PROGRAMS RUNNING <b>${PROGRAMS.length}</b></span>
-  `;
+    <span>PROGRAMS RUNNING <b>${PROGRAMS.length}</b></span>`;
   return `<div class="ticker-wrap"><div class="ticker-track">${items}${items}</div></div>`;
 }
 
@@ -872,58 +574,32 @@ function renderLogin(){
         <div class="brand-sub">Admin and investor access to one place.</div>
         ${state.loginError ? `<div class="login-error">${state.loginError}</div>` : ''}
         <form id="loginForm">
-          <div class="field">
-            <label>Email</label>
-            <input type="email" name="email" autocomplete="username" required>
-          </div>
-          <div class="field">
-            <label>Password</label>
-            <input type="password" name="password" autocomplete="current-password" required>
-          </div>
+          <div class="field"><label>Email</label><input type="email" name="email" autocomplete="username" required></div>
+          <div class="field"><label>Password</label><input type="password" name="password" autocomplete="current-password" required></div>
           <button class="btn btn-primary" type="submit">Sign In</button>
         </form>
-        <div class="demo-note">
-          Sign in with your registered email and password.<br>
-          Investor logins are created by the admin from the Invest &amp; Earn tab.
-        </div>
+        <div class="demo-note">Sign in with your registered email and password.<br>Investor logins are created by the admin from the Invest &amp; Earn tab.</div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 function renderApp(){
   const isAdmin = state.currentUser.role === 'admin';
-  const navItems = isAdmin ? [
-    ['overview','Overview'],
-    ['investors','Invest & Earn'],
-    ['payouts','Payouts Due'],
-    ['students','Learn & Earn'],
-    ['access','User Access']
-  ] : [
-    ['portfolio','My Portfolio']
-  ];
-
+  const navItems = isAdmin ? [['overview','Overview'],['investors','Invest & Earn'],['payouts','Payouts Due'],['students','Learn & Earn'],['access','User Access']] : [['portfolio','My Portfolio']];
   return `
     ${renderTicker()}
     <div class="app">
       <div class="sidebar">
         <div class="side-brand">Nathan Trading<br>Academy<small>MANAGEMENT CONSOLE</small></div>
-        <div>
-          ${navItems.map(([key,label]) => `
-            <div class="nav-item ${state.adminTab===key?'active':''}" data-nav="${key}">${label}</div>
-          `).join('')}
-        </div>
+        <div>${navItems.map(([key,label]) => `<div class="nav-item ${state.adminTab===key?'active':''}" data-nav="${key}">${label}</div>`).join('')}</div>
         <div class="sidebar-footer">
           <div class="user-chip"><b>${state.currentUser.name}</b>${state.currentUser.email}<br>${state.currentUser.role}</div>
           <button class="btn btn-ghost btn-sm" id="logoutBtn" style="width:100%;">Log out</button>
         </div>
       </div>
-      <div class="main">
-        ${isAdmin ? renderAdminTab() : renderInvestorPortfolio(state.currentUser)}
-      </div>
+      <div class="main">${isAdmin ? renderAdminTab() : renderInvestorPortfolio(state.currentUser)}</div>
     </div>
-    ${renderModal()}
-  `;
+    ${renderModal()}`;
 }
 
 function renderAdminTab(){
@@ -937,24 +613,16 @@ function renderAdminTab(){
 
 function renderOverview(){
   const totalPrincipal = totalPrincipalAll();
-  const monthlyObl = state.investors.filter(i=>i.roiFrequency==='Monthly').reduce((s,i)=>s+monthlyAmount(i),0);
-  const yearlyObl = state.investors.filter(i=>i.roiFrequency==='Yearly').reduce((s,i)=>s+yearlyAmount(i),0);
+  const monthlyObl = monthlyObligationTotal();
+  const yearlyObl = yearlyObligationTotal();
   const feesPaid = state.students.filter(s=>s.feeStatus==='Paid').reduce((s,x)=>s+x.fee,0);
   const feesPending = state.students.filter(s=>s.feeStatus!=='Paid').reduce((s,x)=>s+x.fee,0);
   const paidOut = totalPaidAll();
   const pending = monthlyPendingTotal() + yearlyPendingTotal();
-
-  const programCounts = PROGRAMS.map(p => ({
-    program:p, count: state.students.filter(s=>s.program===p).length
-  }));
+  const programCounts = PROGRAMS.map(p => ({program:p, count: state.students.filter(s=>s.program===p).length}));
 
   return `
-    <div class="page-header">
-      <div>
-        <div class="page-title">Overview</div>
-        <div class="page-sub">Both programs, at a glance.</div>
-      </div>
-    </div>
+    <div class="page-header"><div><div class="page-title">Overview</div><div class="page-sub">Both programs, at a glance.</div></div></div>
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-label">Total Investment Received</div><div class="stat-value gold">${fmtINR(totalPrincipal)}</div></div>
       <div class="stat-card"><div class="stat-label">Total Payouts Made</div><div class="stat-value teal">${fmtINR(paidOut)}</div></div>
@@ -966,140 +634,129 @@ function renderOverview(){
       <div class="stat-card"><div class="stat-label">Fees Collected</div><div class="stat-value">${fmtINR(feesPaid)}</div></div>
       <div class="stat-card"><div class="stat-label">Fees Pending</div><div class="stat-value red">${fmtINR(feesPending)}</div></div>
     </div>
-
     <div class="panel">
       <div class="panel-head"><h3>Learn & Earn — enrollment by program</h3></div>
-      <table>
-        <thead><tr><th>Program</th><th>Students</th></tr></thead>
-        <tbody>
-          ${programCounts.map(p => `<tr><td>${p.program}</td><td class="mono">${p.count}</td></tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
+      <table><thead><tr><th>Program</th><th>Students</th></tr></thead>
+      <tbody>${programCounts.map(p => `<tr><td>${p.program}</td><td class="mono">${p.count}</td></tr>`).join('')}</tbody></table>
+    </div>`;
 }
 
-function renderInvestors(){
-  const rows = state.investors.map(inv => {
-    const periodPaid = isPaidCurrentPeriod(inv);
+function renderInvestorPanel(inv){
+  const invTotalPrincipal = investorTotalPrincipal(inv);
+  const invTotalPaid = investorTotalPaid(inv);
+  const termRows = inv.terms.map(t => {
+    const periodPaid = isPaidCurrentPeriod(t);
     return `
     <tr>
-      <td>${inv.name}<div style="color:var(--text-dim);font-size:11px;">${inv.email||''}</div></td>
-      <td class="mono">${fmtINR(inv.principal)}</td>
-      <td class="mono">${inv.roiMonthlyPercent || 0}%</td>
-      <td class="mono">${inv.roiYearlyPercent || 0}%</td>
-      <td><span class="tag ${inv.roiFrequency==='Monthly'?'teal':'gold'}">${inv.roiFrequency}</span></td>
-      <td class="mono">${formatDMY(inv.investmentDate)}</td>
-      <td class="mono">${inv.lockInMonths || 0} mo</td>
-      <td class="mono">${formatDMY(investmentEndDate(inv))}</td>
-      <td class="mono">${fmtINR(suggestedPayout(inv))}</td>
-      <td class="mono">${formatDMY(nextDueDate(inv))}</td>
+      <td class="mono">${TERM_LABELS[t.termNumber]||('Term '+t.termNumber)}</td>
+      <td class="mono">${fmtINR(t.principal)}</td>
+      <td class="mono">${t.roiMonthlyPercent||0}%</td>
+      <td class="mono">${t.roiYearlyPercent||0}%</td>
+      <td><span class="tag ${t.roiFrequency==='Monthly'?'teal':'gold'}">${t.roiFrequency}</span></td>
+      <td class="mono">${formatDMY(t.investmentDate)}</td>
+      <td class="mono">${t.lockInMonths||0} mo</td>
+      <td class="mono">${formatDMY(investmentEndDate(t))}</td>
+      <td class="mono">${fmtINR(suggestedPayout(t))}</td>
+      <td class="mono">${formatDMY(nextDueDate(t))}</td>
       <td><span class="tag ${periodPaid?'teal':'red'}">${periodPaid?'Paid':'Pending'}</span></td>
-      <td class="mono">${fmtINR(totalPaid(inv))}</td>
-      <td class="mono">${inv.payoutHistory.length ? formatDMY(inv.payoutHistory[0].date) : '—'}</td>
-      <td>${inv.authUid ? '<span class="tag teal">Login active</span>' : '<span class="tag red">No login</span>'}</td>
+      <td class="mono">${fmtINR(totalPaid(t))}</td>
+      <td class="mono">${t.payoutHistory.length?formatDMY(t.payoutHistory[0].date):'—'}</td>
+      <td>${t.agreementFileUrl ? `<a href="${t.agreementFileUrl}" target="_blank" style="color:var(--teal);">View</a>` : '<span style="color:var(--text-dim);">None</span>'}</td>
       <td class="sticky-col">
         <div class="row-actions">
-          <button class="btn btn-ghost btn-sm" data-action="pay" data-id="${inv.id}">Record payout</button>
-          <button class="btn btn-ghost btn-sm" data-action="history" data-id="${inv.id}">History</button>
-          <button class="btn btn-ghost btn-sm" data-action="edit-investor" data-id="${inv.id}">Edit</button>
-          <button class="btn btn-ghost btn-sm" data-action="delete-investor" data-id="${inv.id}" style="color:var(--red);">Delete</button>
+          <button class="btn btn-ghost btn-sm" data-action="pay" data-invid="${inv.id}" data-termkey="${t.termKey}">Payout</button>
+          <button class="btn btn-ghost btn-sm" data-action="history" data-invid="${inv.id}" data-termkey="${t.termKey}">History</button>
+          <button class="btn btn-ghost btn-sm" data-action="edit-term" data-invid="${inv.id}" data-termkey="${t.termKey}">Edit</button>
+          <button class="btn btn-ghost btn-sm" data-action="delete-term" data-invid="${inv.id}" data-termkey="${t.termKey}" style="color:var(--red);">Delete</button>
         </div>
       </td>
     </tr>`;
   }).join('');
 
   return `
-    <div class="page-header">
-      <div>
-        <div class="page-title">Invest &amp; Earn</div>
-        <div class="page-sub">Principal, ROI, lock-in and payout tracking per investor. Total invested: <b style="color:var(--gold);">${fmtINR(totalPrincipalAll())}</b></div>
-      </div>
-      <button class="btn btn-primary" data-action="add-investor" style="width:auto;">+ Add Investor</button>
-    </div>
     <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>${inv.name} ${inv.authUid?'<span class="tag teal">Login active</span>':'<span class="tag red">No login</span>'}</h3>
+          <div style="color:var(--text-dim);font-size:11.5px;margin-top:4px;">${inv.email||''}${inv.phone?' · '+inv.phone:''} · Total principal: <b style="color:var(--gold);">${fmtINR(invTotalPrincipal)}</b> · Total paid: <b style="color:var(--teal);">${fmtINR(invTotalPaid)}</b></div>
+        </div>
+        <div class="row-actions">
+          <button class="btn btn-ghost btn-sm" data-action="add-term" data-invid="${inv.id}">+ Add Term</button>
+          <button class="btn btn-ghost btn-sm" data-action="edit-investor-info" data-invid="${inv.id}">Edit Info</button>
+          <button class="btn btn-ghost btn-sm" data-action="delete-investor" data-invid="${inv.id}" style="color:var(--red);">Delete Investor</button>
+        </div>
+      </div>
       <table>
         <thead><tr>
-          <th>Investor</th><th>Principal</th><th>Monthly ROI %</th><th>Yearly ROI %</th><th>Frequency</th>
-          <th>Investment Date</th><th>Lock-in</th><th>End Date</th><th>Payout Amount</th><th>Next Due Date</th><th>Current Period</th><th>Total Paid</th><th>Last Payout</th><th>Login</th><th class="sticky-col">Actions</th>
+          <th>Term</th><th>Principal</th><th>Monthly ROI%</th><th>Yearly ROI%</th><th>Frequency</th>
+          <th>Investment Date</th><th>Lock-in</th><th>End Date</th><th>Payout Amount</th><th>Next Due</th><th>Status</th><th>Total Paid</th><th>Last Payout</th><th>Agreement</th><th class="sticky-col">Actions</th>
         </tr></thead>
-        <tbody>${rows || `<tr><td colspan="15"><div class="empty-state">No investors yet. Add your first one.</div></td></tr>`}</tbody>
+        <tbody>${termRows || `<tr><td colspan="15"><div class="empty-state">No terms yet. Click "+ Add Term".</div></td></tr>`}</tbody>
       </table>
+    </div>`;
+}
+
+function renderInvestors(){
+  const panels = state.investors.map(inv => renderInvestorPanel(inv)).join('');
+  return `
+    <div class="page-header">
+      <div><div class="page-title">Invest &amp; Earn</div><div class="page-sub">Multi-term investor tracking. Total invested: <b style="color:var(--gold);">${fmtINR(totalPrincipalAll())}</b></div></div>
+      <button class="btn btn-primary" data-action="add-investor" style="width:auto;">+ Add Investor</button>
     </div>
-  `;
+    ${panels || `<div class="panel"><div class="empty-state">No investors yet. Add your first one.</div></div>`}`;
 }
 
 function renderPayoutsDue(){
-  const monthlyInvestors = state.investors.filter(i => i.roiFrequency === 'Monthly');
-  const yearlyInvestors = state.investors.filter(i => i.roiFrequency === 'Yearly');
+  const flat = allTermsFlat();
+  const monthlyList = flat.filter(x => x.term.roiFrequency === 'Monthly');
+  const yearlyList = flat.filter(x => x.term.roiFrequency === 'Yearly');
 
-  const monthlyRows = monthlyInvestors.map(inv => {
-    const paid = isPaidThisMonth(inv);
-    return `
-    <tr>
-      <td>${inv.name}</td>
-      <td class="mono">${fmtINR(monthlyAmount(inv))}</td>
+  const monthlyRows = monthlyList.map(({inv,term}) => {
+    const paid = isPaidThisMonth(term);
+    return `<tr>
+      <td>${inv.name} <span class="tag gold">${TERM_LABELS[term.termNumber]}</span></td>
+      <td class="mono">${fmtINR(monthlyAmount(term))}</td>
       <td class="mono">${formatDMY(nextMonthlyPayoutDate())}</td>
       <td><span class="tag ${paid?'teal':'red'}">${paid?'Paid this month':'Unpaid'}</span></td>
-      <td><button class="btn btn-ghost btn-sm" data-action="pay" data-id="${inv.id}">Record payout</button></td>
+      <td><button class="btn btn-ghost btn-sm" data-action="pay" data-invid="${inv.id}" data-termkey="${term.termKey}">Record payout</button></td>
     </tr>`;
   }).join('');
-  const monthlyTotal = monthlyInvestors.reduce((s,i)=>s+monthlyAmount(i),0);
+  const monthlyTotal = monthlyList.reduce((s,x)=>s+monthlyAmount(x.term),0);
   const monthlyPending = monthlyPendingTotal();
 
-  const yearlyRows = yearlyInvestors.map(inv => {
-    const paid = isPaidThisYear(inv);
-    return `
-    <tr>
-      <td>${inv.name}</td>
-      <td class="mono">${fmtINR(yearlyAmount(inv))}</td>
-      <td class="mono">${formatDMY(anniversaryDueDate(inv.investmentDate))}</td>
+  const yearlyRows = yearlyList.map(({inv,term}) => {
+    const paid = isPaidThisYear(term);
+    return `<tr>
+      <td>${inv.name} <span class="tag gold">${TERM_LABELS[term.termNumber]}</span></td>
+      <td class="mono">${fmtINR(yearlyAmount(term))}</td>
+      <td class="mono">${formatDMY(anniversaryDueDate(term.investmentDate))}</td>
       <td><span class="tag ${paid?'teal':'red'}">${paid?'Paid this year':'Unpaid'}</span></td>
-      <td><button class="btn btn-ghost btn-sm" data-action="pay" data-id="${inv.id}">Record payout</button></td>
+      <td><button class="btn btn-ghost btn-sm" data-action="pay" data-invid="${inv.id}" data-termkey="${term.termKey}">Record payout</button></td>
     </tr>`;
   }).join('');
-  const yearlyTotal = yearlyInvestors.reduce((s,i)=>s+yearlyAmount(i),0);
+  const yearlyTotal = yearlyList.reduce((s,x)=>s+yearlyAmount(x.term),0);
   const yearlyPending = yearlyPendingTotal();
 
   return `
-    <div class="page-header">
-      <div>
-        <div class="page-title">Payouts Due</div>
-        <div class="page-sub">What's owed this month and this year, per investor — obligation vs. what's still pending.</div>
-      </div>
-    </div>
-
+    <div class="page-header"><div><div class="page-title">Payouts Due</div><div class="page-sub">What's owed this month and this year, per investor term — obligation vs. what's still pending.</div></div></div>
     <div class="panel">
-      <div class="panel-head"><h3>Due This Month — Monthly ROI Investors</h3></div>
-      <table>
-        <thead><tr><th>Investor</th><th>Amount</th><th>Due Date (1st Saturday)</th><th>Status</th><th></th></tr></thead>
-        <tbody>${monthlyRows || `<tr><td colspan="5"><div class="empty-state">No Monthly ROI investors.</div></td></tr>`}</tbody>
-        ${monthlyInvestors.length ? `<tfoot>
-          <tr><td>Total Obligation</td><td class="mono">${fmtINR(monthlyTotal)}</td><td colspan="3"></td></tr>
-          <tr><td>Pending (Unpaid)</td><td class="mono" style="color:var(--red);">${fmtINR(monthlyPending)}</td><td colspan="3"></td></tr>
-        </tfoot>` : ''}
+      <div class="panel-head"><h3>Due This Month — Monthly ROI Terms</h3></div>
+      <table><thead><tr><th>Investor</th><th>Amount</th><th>Due Date (1st Saturday)</th><th>Status</th><th></th></tr></thead>
+      <tbody>${monthlyRows || `<tr><td colspan="5"><div class="empty-state">No Monthly ROI terms.</div></td></tr>`}</tbody>
+      ${monthlyList.length ? `<tfoot><tr><td>Total Obligation</td><td class="mono">${fmtINR(monthlyTotal)}</td><td colspan="3"></td></tr><tr><td>Pending (Unpaid)</td><td class="mono" style="color:var(--red);">${fmtINR(monthlyPending)}</td><td colspan="3"></td></tr></tfoot>` : ''}
       </table>
     </div>
-
     <div class="panel">
-      <div class="panel-head"><h3>Due This Year — Yearly ROI Investors</h3></div>
-      <table>
-        <thead><tr><th>Investor</th><th>Amount</th><th>Due Date (Investment Anniversary)</th><th>Status</th><th></th></tr></thead>
-        <tbody>${yearlyRows || `<tr><td colspan="5"><div class="empty-state">No Yearly ROI investors.</div></td></tr>`}</tbody>
-        ${yearlyInvestors.length ? `<tfoot>
-          <tr><td>Total Obligation</td><td class="mono">${fmtINR(yearlyTotal)}</td><td colspan="3"></td></tr>
-          <tr><td>Pending (Unpaid)</td><td class="mono" style="color:var(--red);">${fmtINR(yearlyPending)}</td><td colspan="3"></td></tr>
-        </tfoot>` : ''}
+      <div class="panel-head"><h3>Due This Year — Yearly ROI Terms</h3></div>
+      <table><thead><tr><th>Investor</th><th>Amount</th><th>Due Date (Investment Anniversary)</th><th>Status</th><th></th></tr></thead>
+      <tbody>${yearlyRows || `<tr><td colspan="5"><div class="empty-state">No Yearly ROI terms.</div></td></tr>`}</tbody>
+      ${yearlyList.length ? `<tfoot><tr><td>Total Obligation</td><td class="mono">${fmtINR(yearlyTotal)}</td><td colspan="3"></td></tr><tr><td>Pending (Unpaid)</td><td class="mono" style="color:var(--red);">${fmtINR(yearlyPending)}</td><td colspan="3"></td></tr></tfoot>` : ''}
       </table>
-    </div>
-  `;
+    </div>`;
 }
 
 function renderStudents(){
-  const filtered = state.studentProgramFilter === 'All'
-    ? state.students
-    : state.students.filter(s => s.program === state.studentProgramFilter);
-
+  const filtered = state.studentProgramFilter === 'All' ? state.students : state.students.filter(s => s.program === state.studentProgramFilter);
   const rows = filtered.map(st => `
     <tr>
       <td>${st.name}<div style="color:var(--text-dim);font-size:11px;">${st.email||''}</div></td>
@@ -1107,104 +764,86 @@ function renderStudents(){
       <td class="mono">${fmtINR(st.fee)}</td>
       <td><span class="tag ${st.feeStatus==='Paid'?'teal':st.feeStatus==='Partial'?'gold':'red'}">${st.feeStatus}</span></td>
       <td class="mono">${formatDMY(st.enrollDate)}</td>
-      <td class="sticky-col">
-        <div class="row-actions">
-          <button class="btn btn-ghost btn-sm" data-action="edit-student" data-id="${st.id}">Edit</button>
-          <button class="btn btn-ghost btn-sm" data-action="delete-student" data-id="${st.id}" style="color:var(--red);">Delete</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-
+      <td class="sticky-col"><div class="row-actions">
+        <button class="btn btn-ghost btn-sm" data-action="edit-student" data-id="${st.id}">Edit</button>
+        <button class="btn btn-ghost btn-sm" data-action="delete-student" data-id="${st.id}" style="color:var(--red);">Delete</button>
+      </div></td>
+    </tr>`).join('');
   return `
     <div class="page-header">
-      <div>
-        <div class="page-title">Learn &amp; Earn</div>
-        <div class="page-sub">Enrollment and fees across all sub-programs.</div>
-      </div>
+      <div><div class="page-title">Learn &amp; Earn</div><div class="page-sub">Enrollment and fees across all sub-programs.</div></div>
       <button class="btn btn-primary" data-action="add-student" style="width:auto;">+ Add Student</button>
     </div>
     <div class="tabs-bar">
       <div class="chip-btn ${state.studentProgramFilter==='All'?'active':''}" data-filter="All">All (${state.students.length})</div>
       ${PROGRAMS.map(p => `<div class="chip-btn ${state.studentProgramFilter===p?'active':''}" data-filter="${p}">${p} (${state.students.filter(s=>s.program===p).length})</div>`).join('')}
     </div>
-    <div class="panel">
-      <table>
-        <thead><tr><th>Student</th><th>Program</th><th>Fee</th><th>Status</th><th>Enrolled</th><th class="sticky-col">Actions</th></tr></thead>
-        <tbody>${rows || `<tr><td colspan="6"><div class="empty-state">No students in this view yet.</div></td></tr>`}</tbody>
-      </table>
-    </div>
-  `;
+    <div class="panel"><table>
+      <thead><tr><th>Student</th><th>Program</th><th>Fee</th><th>Status</th><th>Enrolled</th><th class="sticky-col">Actions</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="6"><div class="empty-state">No students in this view yet.</div></td></tr>`}</tbody>
+    </table></div>`;
 }
 
 function renderAccess(){
   const rows = state.allUsers.map(u => `
     <tr>
-      <td>${u.email || '—'}</td>
-      <td>${u.name||'—'}</td>
+      <td>${u.email || '—'}</td><td>${u.name||'—'}</td>
       <td><span class="tag ${u.role==='admin'?'gold':'teal'}">${u.role}</span></td>
-      <td>
-        ${u.role !== 'admin' ? `<button class="btn btn-ghost btn-sm" data-action="delete-user" data-uid="${u.uid}" style="color:var(--red);">Remove</button>` : '<span style="color:var(--text-dim);font-size:12px;">protected</span>'}
-      </td>
-    </tr>
-  `).join('');
+      <td>${u.role !== 'admin' ? `<button class="btn btn-ghost btn-sm" data-action="delete-user" data-uid="${u.uid}" style="color:var(--red);">Remove</button>` : '<span style="color:var(--text-dim);font-size:12px;">protected</span>'}</td>
+    </tr>`).join('');
   return `
-    <div class="page-header">
-      <div>
-        <div class="page-title">User Access</div>
-        <div class="page-sub">Everyone who can sign in to this console. Investor logins are created from the Invest &amp; Earn tab.</div>
+    <div class="page-header"><div><div class="page-title">User Access</div><div class="page-sub">Everyone who can sign in to this console. Investor logins are created from the Invest &amp; Earn tab.</div></div></div>
+    <div class="panel"><table>
+      <thead><tr><th>Email</th><th>Name</th><th>Role</th><th></th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="4"><div class="empty-state">No users found.</div></td></tr>`}</tbody>
+    </table></div>`;
+}
+
+function renderTermPortfolioBlock(inv, t){
+  const historyRows = t.payoutHistory.map(p => `
+    <tr>
+      <td class="mono">${formatDMY(p.date)}</td><td class="mono">${fmtINR(p.amount)}</td><td>${p.note||'—'}</td>
+      <td>${p.receiptUrl ? `<a href="${p.receiptUrl}" target="_blank" style="color:var(--teal);">View</a>` : '—'}</td>
+    </tr>`).join('');
+  const periodPaid = isPaidCurrentPeriod(t);
+  return `
+    <div class="portfolio-hero">
+      <div class="hero-label">${TERM_LABELS[t.termNumber]||'Term'} — Principal Invested</div>
+      <div class="hero-value gold" style="color:var(--gold);">${fmtINR(t.principal)}</div>
+      <div class="hero-grid">
+        <div><div class="hero-label">Monthly ROI</div><div class="hero-value">${t.roiMonthlyPercent||0}%</div></div>
+        <div><div class="hero-label">Yearly ROI</div><div class="hero-value">${t.roiYearlyPercent||0}%</div></div>
+        <div><div class="hero-label">Payout Frequency</div><div class="hero-value">${t.roiFrequency}</div></div>
+        <div><div class="hero-label">Est. Payout Amount</div><div class="hero-value" style="color:var(--teal);">${fmtINR(suggestedPayout(t))}</div></div>
+        <div><div class="hero-label">Next Due Date</div><div class="hero-value" style="font-size:16px;">${formatDMY(nextDueDate(t))}</div></div>
+        <div><div class="hero-label">This Period</div><div class="hero-value" style="font-size:16px;color:${periodPaid?'var(--teal)':'var(--red)'};">${periodPaid?'Paid':'Pending'}</div></div>
+        <div><div class="hero-label">Total Paid So Far</div><div class="hero-value" style="font-size:16px;color:var(--teal);">${fmtINR(totalPaid(t))}</div></div>
+        <div><div class="hero-label">Investment Date</div><div class="hero-value" style="font-size:16px;">${formatDMY(t.investmentDate)}</div></div>
+        <div><div class="hero-label">Lock-in Period</div><div class="hero-value" style="font-size:16px;">${t.lockInMonths||0} months</div></div>
+        <div><div class="hero-label">End Date</div><div class="hero-value" style="font-size:16px;">${formatDMY(investmentEndDate(t))}</div></div>
+        <div><div class="hero-label">Agreement</div><div class="hero-value" style="font-size:16px;">${t.agreementFileUrl?`<a href="${t.agreementFileUrl}" target="_blank" style="color:var(--teal);">View file</a>`:'Not uploaded'}</div></div>
       </div>
     </div>
     <div class="panel">
-      <table>
-        <thead><tr><th>Email</th><th>Name</th><th>Role</th><th></th></tr></thead>
-        <tbody>${rows || `<tr><td colspan="4"><div class="empty-state">No users found.</div></td></tr>`}</tbody>
-      </table>
-    </div>
-  `;
+      <div class="panel-head"><h3>${TERM_LABELS[t.termNumber]} — Payout History</h3></div>
+      <table><thead><tr><th>Date</th><th>Amount</th><th>Note</th><th>Receipt</th></tr></thead>
+      <tbody>${historyRows || `<tr><td colspan="4"><div class="empty-state">No payouts recorded yet.</div></td></tr>`}</tbody></table>
+    </div>`;
 }
 
 function renderInvestorPortfolio(user){
   const inv = state.investors.find(i => i.id === user.investorId);
-  if(!inv){
+  if(!inv || !inv.terms.length){
     return `<div class="page-header"><div class="page-title">My Portfolio</div></div><div class="empty-state">No investment record is linked to this login yet. Please contact the academy.</div>`;
   }
-  const historyRows = inv.payoutHistory.map(p => `
-    <tr><td class="mono">${formatDMY(p.date)}</td><td class="mono">${fmtINR(p.amount)}</td><td>${p.note||'—'}</td></tr>
-  `).join('');
-  const periodPaid = isPaidCurrentPeriod(inv);
-
+  const totalPrincipal = investorTotalPrincipal(inv);
+  const totalAllPaid = investorTotalPaid(inv);
+  const blocks = inv.terms.map(t => renderTermPortfolioBlock(inv, t)).join('');
   return `
     <div class="page-header">
-      <div>
-        <div class="page-title">My Portfolio</div>
-        <div class="page-sub">Welcome back, ${inv.name}.</div>
-      </div>
+      <div><div class="page-title">My Portfolio</div><div class="page-sub">Welcome back, ${inv.name}. Total principal across all terms: <b style="color:var(--gold);">${fmtINR(totalPrincipal)}</b> · Total paid: <b style="color:var(--teal);">${fmtINR(totalAllPaid)}</b></div></div>
     </div>
-    <div class="portfolio-hero">
-      <div class="hero-label">Principal Invested</div>
-      <div class="hero-value gold" style="color:var(--gold);">${fmtINR(inv.principal)}</div>
-      <div class="hero-grid">
-        <div><div class="hero-label">Monthly ROI</div><div class="hero-value">${inv.roiMonthlyPercent || 0}%</div></div>
-        <div><div class="hero-label">Yearly ROI</div><div class="hero-value">${inv.roiYearlyPercent || 0}%</div></div>
-        <div><div class="hero-label">Payout Frequency</div><div class="hero-value">${inv.roiFrequency}</div></div>
-        <div><div class="hero-label">Est. Payout Amount</div><div class="hero-value" style="color:var(--teal);">${fmtINR(suggestedPayout(inv))}</div></div>
-        <div><div class="hero-label">Next Due Date</div><div class="hero-value" style="font-size:16px;">${formatDMY(nextDueDate(inv))}</div></div>
-        <div><div class="hero-label">This Period</div><div class="hero-value" style="font-size:16px;color:${periodPaid?'var(--teal)':'var(--red)'};">${periodPaid?'Paid':'Pending'}</div></div>
-        <div><div class="hero-label">Total Paid So Far</div><div class="hero-value" style="font-size:16px;color:var(--teal);">${fmtINR(totalPaid(inv))}</div></div>
-        <div><div class="hero-label">Investment Date</div><div class="hero-value" style="font-size:16px;">${formatDMY(inv.investmentDate)}</div></div>
-        <div><div class="hero-label">Lock-in Period</div><div class="hero-value" style="font-size:16px;">${inv.lockInMonths || 0} months</div></div>
-        <div><div class="hero-label">End Date</div><div class="hero-value" style="font-size:16px;">${formatDMY(investmentEndDate(inv))}</div></div>
-      </div>
-    </div>
-    <div class="panel">
-      <div class="panel-head"><h3>Payout History</h3></div>
-      <table>
-        <thead><tr><th>Date</th><th>Amount</th><th>Note</th></tr></thead>
-        <tbody>${historyRows || `<tr><td colspan="3"><div class="empty-state">No payouts recorded yet.</div></td></tr>`}</tbody>
-      </table>
-    </div>
-  `;
+    ${blocks}`;
 }
 
 /* ---------------- Modals ---------------- */
@@ -1212,40 +851,30 @@ function renderModal(){
   if(!state.modal) return '';
   const {type, payload} = state.modal;
 
-  if(type === 'add-investor' || type === 'edit-investor'){
-    const inv = payload.id ? state.investors.find(x=>x.id===payload.id) : null;
+  if(type === 'add-investor'){
     return `
       <div class="modal-backdrop open"><div class="modal">
-        <h3>${inv ? 'Edit Investor' : 'Add Investor'}</h3>
-        <form id="investorForm">
-          <div class="field"><label>Full name</label><input name="name" required value="${inv?inv.name:''}"></div>
+        <h3>Add Investor</h3>
+        <form id="newInvestorForm">
+          <div class="field"><label>Full name</label><input name="name" required></div>
           <div class="field-row">
-            <div class="field"><label>Email</label><input type="email" name="email" value="${inv?inv.email||'':''}"></div>
-            <div class="field"><label>Phone</label><input name="phone" value="${inv?inv.phone||'':''}"></div>
+            <div class="field"><label>Email</label><input type="email" name="email"></div>
+            <div class="field"><label>Phone</label><input name="phone"></div>
           </div>
-          <div class="field"><label>Invested Amount (₹)</label><input type="number" step="0.01" name="principal" required value="${inv?inv.principal:''}"></div>
-
-          <div class="field">
-            <label>Date of Investment (DD-MM-YYYY)</label>
-            ${dateDropdown('investmentDate', inv?inv.investmentDate:todayStr())}
-          </div>
-          <div class="field"><label>Lock-in Period (months)</label><input type="number" step="1" min="0" name="lockInMonths" required value="${inv?inv.lockInMonths:''}"></div>
-
+          <div class="field"><label>Term</label>${termDropdown('termNumber', 1)}</div>
+          <div class="field"><label>Invested Amount (₹)</label><input type="number" step="0.01" name="principal" required></div>
+          <div class="field"><label>Date of Investment (DD-MM-YYYY)</label>${dateDropdown('investmentDate', todayStr())}</div>
+          <div class="field"><label>Lock-in Period (months)</label><input type="number" step="1" min="0" name="lockInMonths" required></div>
           <div class="field">
             <label>ROI Asking For</label>
-            <select name="roiFrequency">
-              <option value="Monthly" ${inv&&inv.roiFrequency==='Monthly'?'selected':''}>Monthly</option>
-              <option value="Yearly" ${inv&&inv.roiFrequency==='Yearly'?'selected':''}>Yearly</option>
-            </select>
+            <select name="roiFrequency"><option value="Monthly">Monthly</option><option value="Yearly">Yearly</option></select>
           </div>
-          <div class="field-hint">Monthly uses the Monthly ROI % below and is due the <b>1st Saturday</b> of each month. Yearly uses the Yearly ROI % and is due on the <b>anniversary of the investment date</b>.</div>
-
+          <div class="field-hint">Monthly uses Monthly ROI % and is due the <b>1st Saturday</b> of each month. Yearly uses Yearly ROI % and is due on the <b>investment anniversary</b>.</div>
           <div class="field-row">
-            <div class="field"><label>ROI Monthly (%)</label><input type="number" step="0.01" name="roiMonthlyPercent" value="${inv?inv.roiMonthlyPercent||'':''}"></div>
-            <div class="field"><label>ROI Yearly (%)</label><input type="number" step="0.01" name="roiYearlyPercent" value="${inv?inv.roiYearlyPercent||'':''}"></div>
+            <div class="field"><label>ROI Monthly (%)</label><input type="number" step="0.01" name="roiMonthlyPercent"></div>
+            <div class="field"><label>ROI Yearly (%)</label><input type="number" step="0.01" name="roiYearlyPercent"></div>
           </div>
-
-          ${!inv ? `
+          <div class="field"><label>Investment Agreement (optional)</label><input type="file" name="agreementFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"></div>
           <div class="field" style="display:flex;align-items:center;gap:8px;">
             <input type="checkbox" name="createLogin" id="createLogin" style="width:auto;">
             <label for="createLogin" style="margin:0;">Create an investor login now</label>
@@ -1254,61 +883,115 @@ function renderModal(){
             <div class="field"><label>Login Email</label><input type="email" name="loginEmail"></div>
             <div class="field"><label>Login Password</label><input type="text" name="loginPassword" placeholder="min 6 characters"></div>
           </div>
-          ` : ''}
           <div class="modal-actions">
             <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
-            <button type="submit" class="btn btn-primary" style="width:auto;">${inv?'Save changes':'Add investor'}</button>
+            <button type="submit" class="btn btn-primary" style="width:auto;">Add investor</button>
           </div>
         </form>
-      </div></div>
-    `;
+      </div></div>`;
   }
 
-  if(type === 'pay'){
-    const inv = state.investors.find(x=>x.id===payload.id);
-    const defaultDate = inv.roiFrequency === 'Monthly' ? nextMonthlyPayoutDate() : todayStr();
+  if(type === 'edit-investor-info'){
+    const inv = state.investors.find(x=>x.id===payload.invid);
     return `
       <div class="modal-backdrop open"><div class="modal">
-        <h3>Record Payout — ${inv.name}</h3>
-        <form id="payoutForm">
-          <div class="field">
-            <label>Date (DD-MM-YYYY)</label>
-            ${dateDropdown('date', defaultDate)}
+        <h3>Edit Investor Info</h3>
+        <form id="editInvestorInfoForm">
+          <div class="field"><label>Full name</label><input name="name" required value="${inv.name}"></div>
+          <div class="field-row">
+            <div class="field"><label>Email</label><input type="email" name="email" value="${inv.email||''}"></div>
+            <div class="field"><label>Phone</label><input name="phone" value="${inv.phone||''}"></div>
           </div>
-          ${inv.roiFrequency === 'Monthly' ? `<div class="field-hint">Auto-suggested to the 1st Saturday of the month — <b>${formatDMY(defaultDate)}</b>. Change if you paid on a different day.</div>` : ''}
-          <div class="field"><label>Amount (₹)</label><input type="number" step="0.01" name="amount" value="${suggestedPayout(inv).toFixed(2)}" required></div>
-          <div class="field"><label>Note</label><input name="note" placeholder="e.g. July payout"></div>
           <div class="modal-actions">
             <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
-            <button type="submit" class="btn btn-primary" style="width:auto;">Save payout</button>
+            <button type="submit" class="btn btn-primary" style="width:auto;">Save changes</button>
           </div>
         </form>
-      </div></div>
-    `;
+      </div></div>`;
+  }
+
+  if(type === 'add-term' || type === 'edit-term'){
+    const inv = state.investors.find(x=>x.id===payload.invid);
+    const t = payload.termkey ? inv.terms.find(x=>x.termKey===payload.termkey) : null;
+    return `
+      <div class="modal-backdrop open"><div class="modal">
+        <h3>${t ? 'Edit Term — '+inv.name : 'Add Term — '+inv.name}</h3>
+        <form id="termForm">
+          <div class="field"><label>Term</label>${termDropdown('termNumber', t?t.termNumber:2)}</div>
+          <div class="field"><label>Invested Amount (₹)</label><input type="number" step="0.01" name="principal" required value="${t?t.principal:''}"></div>
+          <div class="field"><label>Date of Investment (DD-MM-YYYY)</label>${dateDropdown('investmentDate', t?t.investmentDate:todayStr())}</div>
+          <div class="field"><label>Lock-in Period (months)</label><input type="number" step="1" min="0" name="lockInMonths" required value="${t?t.lockInMonths:''}"></div>
+          <div class="field">
+            <label>ROI Asking For</label>
+            <select name="roiFrequency">
+              <option value="Monthly" ${t&&t.roiFrequency==='Monthly'?'selected':''}>Monthly</option>
+              <option value="Yearly" ${t&&t.roiFrequency==='Yearly'?'selected':''}>Yearly</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>ROI Monthly (%)</label><input type="number" step="0.01" name="roiMonthlyPercent" value="${t?t.roiMonthlyPercent||'':''}"></div>
+            <div class="field"><label>ROI Yearly (%)</label><input type="number" step="0.01" name="roiYearlyPercent" value="${t?t.roiYearlyPercent||'':''}"></div>
+          </div>
+          <div class="field">
+            <label>Investment Agreement ${t&&t.agreementFileName?'(currently: '+t.agreementFileName+')':'(optional)'}</label>
+            <input type="file" name="agreementFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="width:auto;">${t?'Save changes':'Add term'}</button>
+          </div>
+        </form>
+      </div></div>`;
+  }
+
+  if(type === 'pay' || type === 'edit-payout'){
+    const inv = state.investors.find(x=>x.id===payload.invid);
+    const t = inv.terms.find(x=>x.termKey===payload.termkey);
+    const editIndex = type === 'edit-payout' ? payload.idx : null;
+    const existing = editIndex!=null ? t.payoutHistory[editIndex] : null;
+    const defaultDate = existing ? existing.date : (t.roiFrequency === 'Monthly' ? nextMonthlyPayoutDate() : todayStr());
+    return `
+      <div class="modal-backdrop open"><div class="modal">
+        <h3>${existing?'Edit Payout':'Record Payout'} — ${inv.name} (${TERM_LABELS[t.termNumber]})</h3>
+        <form id="payoutForm">
+          <div class="field"><label>Date (DD-MM-YYYY)</label>${dateDropdown('date', defaultDate)}</div>
+          ${!existing && t.roiFrequency === 'Monthly' ? `<div class="field-hint">Auto-suggested to the 1st Saturday of the month — <b>${formatDMY(defaultDate)}</b>. Change if paid on a different day.</div>` : ''}
+          <div class="field"><label>Amount (₹)</label><input type="number" step="0.01" name="amount" value="${existing?existing.amount:suggestedPayout(t).toFixed(2)}" required></div>
+          <div class="field"><label>Note</label><input name="note" placeholder="e.g. July payout" value="${existing?existing.note||'':''}"></div>
+          <div class="field">
+            <label>Payout Receipt ${existing&&existing.receiptFileName?'(currently: '+existing.receiptFileName+')':'(optional)'}</label>
+            <input type="file" name="receiptFile" accept=".pdf,.jpg,.jpeg,.png">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="width:auto;">${existing?'Save changes':'Save payout'}</button>
+          </div>
+        </form>
+      </div></div>`;
   }
 
   if(type === 'history'){
-    const inv = state.investors.find(x=>x.id===payload.id);
-    const rows = inv.payoutHistory.map((p,idx) => `
+    const inv = state.investors.find(x=>x.id===payload.invid);
+    const t = inv.terms.find(x=>x.termKey===payload.termkey);
+    const rows = t.payoutHistory.map((p,idx) => `
       <tr>
-        <td class="mono">${formatDMY(p.date)}</td>
-        <td class="mono">${fmtINR(p.amount)}</td>
-        <td>${p.note||'—'}</td>
-        <td><button class="btn btn-ghost btn-sm" data-action="delete-payout" data-id="${inv.id}" data-idx="${idx}" style="color:var(--red);">Delete</button></td>
+        <td class="mono">${formatDMY(p.date)}</td><td class="mono">${fmtINR(p.amount)}</td><td>${p.note||'—'}</td>
+        <td>${p.receiptUrl?`<a href="${p.receiptUrl}" target="_blank" style="color:var(--teal);">View</a>`:'—'}</td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-ghost btn-sm" data-action="edit-payout" data-invid="${inv.id}" data-termkey="${t.termKey}" data-idx="${idx}">Edit</button>
+            <button class="btn btn-ghost btn-sm" data-action="delete-payout" data-invid="${inv.id}" data-termkey="${t.termKey}" data-idx="${idx}" style="color:var(--red);">Delete</button>
+          </div>
+        </td>
       </tr>`).join('');
     return `
       <div class="modal-backdrop open"><div class="modal">
-        <h3>Payout History — ${inv.name}</h3>
-        <div class="field-hint" style="margin-top:0;">Total paid so far: <b>${fmtINR(totalPaid(inv))}</b></div>
-        <table>
-          <thead><tr><th>Date</th><th>Amount</th><th>Note</th><th></th></tr></thead>
-          <tbody>${rows || `<tr><td colspan="4"><div class="empty-state">No payouts yet.</div></td></tr>`}</tbody>
-        </table>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-ghost" data-action="close-modal">Close</button>
-        </div>
-      </div></div>
-    `;
+        <h3>Payout History — ${inv.name} (${TERM_LABELS[t.termNumber]})</h3>
+        <div class="field-hint" style="margin-top:0;">Total paid so far: <b>${fmtINR(totalPaid(t))}</b></div>
+        <table><thead><tr><th>Date</th><th>Amount</th><th>Note</th><th>Receipt</th><th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="5"><div class="empty-state">No payouts yet.</div></td></tr>`}</tbody></table>
+        <div class="modal-actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Close</button></div>
+      </div></div>`;
   }
 
   if(type === 'add-student' || type === 'edit-student'){
@@ -1322,28 +1005,17 @@ function renderModal(){
             <div class="field"><label>Email</label><input type="email" name="email" value="${st?st.email||'':''}"></div>
             <div class="field"><label>Phone</label><input name="phone" value="${st?st.phone||'':''}"></div>
           </div>
-          <div class="field">
-            <label>Program</label>
-            <select name="program">
-              ${PROGRAMS.map(p => `<option ${st&&st.program===p?'selected':''}>${p}</option>`).join('')}
-            </select>
-          </div>
+          <div class="field"><label>Program</label><select name="program">${PROGRAMS.map(p => `<option ${st&&st.program===p?'selected':''}>${p}</option>`).join('')}</select></div>
           <div class="field-row">
             <div class="field"><label>Fee (₹)</label><input type="number" step="0.01" name="fee" required value="${st?st.fee:''}"></div>
-            <div class="field">
-              <label>Fee Status</label>
-              <select name="feeStatus">
-                ${FEE_STATUSES.map(s => `<option ${st&&st.feeStatus===s?'selected':''}>${s}</option>`).join('')}
-              </select>
-            </div>
+            <div class="field"><label>Fee Status</label><select name="feeStatus">${FEE_STATUSES.map(s => `<option ${st&&st.feeStatus===s?'selected':''}>${s}</option>`).join('')}</select></div>
           </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
             <button type="submit" class="btn btn-primary" style="width:auto;">${st?'Save changes':'Add student'}</button>
           </div>
         </form>
-      </div></div>
-    `;
+      </div></div>`;
   }
   return '';
 }
@@ -1351,57 +1023,53 @@ function renderModal(){
 /* ---------------- Event binding ---------------- */
 function bindEvents(){
   const loginForm = document.getElementById('loginForm');
-  if(loginForm) loginForm.addEventListener('submit', e => {
-    e.preventDefault();
-    tryLogin(e.target.email.value.trim(), e.target.password.value);
-  });
+  if(loginForm) loginForm.addEventListener('submit', e => { e.preventDefault(); tryLogin(e.target.email.value.trim(), e.target.password.value); });
 
   const logoutBtn = document.getElementById('logoutBtn');
   if(logoutBtn) logoutBtn.addEventListener('click', logout);
 
-  document.querySelectorAll('[data-nav]').forEach(el => {
-    el.addEventListener('click', () => { state.adminTab = el.getAttribute('data-nav'); render(); });
-  });
-
-  document.querySelectorAll('[data-filter]').forEach(el => {
-    el.addEventListener('click', () => { state.studentProgramFilter = el.getAttribute('data-filter'); render(); });
-  });
-
+  document.querySelectorAll('[data-nav]').forEach(el => el.addEventListener('click', () => { state.adminTab = el.getAttribute('data-nav'); render(); }));
+  document.querySelectorAll('[data-filter]').forEach(el => el.addEventListener('click', () => { state.studentProgramFilter = el.getAttribute('data-filter'); render(); }));
   document.querySelectorAll('[data-action="close-modal"]').forEach(el => el.addEventListener('click', closeModal));
+
   const addInvBtn = document.querySelector('[data-action="add-investor"]');
   if(addInvBtn) addInvBtn.addEventListener('click', () => openModal('add-investor'));
   const addStBtn = document.querySelector('[data-action="add-student"]');
   if(addStBtn) addStBtn.addEventListener('click', () => openModal('add-student'));
 
-  document.querySelectorAll('[data-action="edit-investor"]').forEach(el => el.addEventListener('click', () => openModal('edit-investor', {id: el.getAttribute('data-id')})));
-  document.querySelectorAll('[data-action="pay"]').forEach(el => el.addEventListener('click', () => openModal('pay', {id: el.getAttribute('data-id')})));
-  document.querySelectorAll('[data-action="history"]').forEach(el => el.addEventListener('click', () => openModal('history', {id: el.getAttribute('data-id')})));
-  document.querySelectorAll('[data-action="delete-investor"]').forEach(el => el.addEventListener('click', () => {
-    if(confirm('Remove this investor? This also removes their login if one exists.')) deleteInvestor(el.getAttribute('data-id'));
+  document.querySelectorAll('[data-action="add-term"]').forEach(el => el.addEventListener('click', () => openModal('add-term', {invid: el.getAttribute('data-invid')})));
+  document.querySelectorAll('[data-action="edit-term"]').forEach(el => el.addEventListener('click', () => openModal('edit-term', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey')})));
+  document.querySelectorAll('[data-action="delete-term"]').forEach(el => el.addEventListener('click', () => {
+    if(confirm('Delete this term? All its payout history and agreement will be lost.')) deleteTerm(el.getAttribute('data-invid'), el.getAttribute('data-termkey'));
   }));
+  document.querySelectorAll('[data-action="edit-investor-info"]').forEach(el => el.addEventListener('click', () => openModal('edit-investor-info', {invid: el.getAttribute('data-invid')})));
+  document.querySelectorAll('[data-action="delete-investor"]').forEach(el => el.addEventListener('click', () => {
+    if(confirm('Remove this investor and all their terms? This also removes their login if one exists.')) deleteInvestor(el.getAttribute('data-invid'));
+  }));
+
+  document.querySelectorAll('[data-action="pay"]').forEach(el => el.addEventListener('click', () => openModal('pay', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey')})));
+  document.querySelectorAll('[data-action="history"]').forEach(el => el.addEventListener('click', () => openModal('history', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey')})));
+  document.querySelectorAll('[data-action="edit-payout"]').forEach(el => el.addEventListener('click', () => openModal('edit-payout', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey'), idx: parseInt(el.getAttribute('data-idx'),10)})));
   document.querySelectorAll('[data-action="delete-payout"]').forEach(el => el.addEventListener('click', () => {
     if(confirm('Delete this payout record? This cannot be undone.')){
-      const invId = el.getAttribute('data-id');
-      deletePayout(invId, parseInt(el.getAttribute('data-idx'),10));
-      openModal('history', {id: invId});
+      const invid = el.getAttribute('data-invid'), termkey = el.getAttribute('data-termkey');
+      deletePayout(invid, termkey, parseInt(el.getAttribute('data-idx'),10));
+      openModal('history', {invid, termkey});
     }
   }));
 
   document.querySelectorAll('[data-action="edit-student"]').forEach(el => el.addEventListener('click', () => openModal('edit-student', {id: el.getAttribute('data-id')})));
-  document.querySelectorAll('[data-action="delete-student"]').forEach(el => el.addEventListener('click', () => {
-    if(confirm('Remove this student?')) deleteStudent(el.getAttribute('data-id'));
-  }));
+  document.querySelectorAll('[data-action="delete-student"]').forEach(el => el.addEventListener('click', () => { if(confirm('Remove this student?')) deleteStudent(el.getAttribute('data-id')); }));
+  document.querySelectorAll('[data-action="delete-user"]').forEach(el => el.addEventListener('click', () => { if(confirm('Remove this login? The investor record itself will not be deleted.')) deleteUserAccess(el.getAttribute('data-uid')); }));
 
-  document.querySelectorAll('[data-action="delete-user"]').forEach(el => el.addEventListener('click', () => {
-    if(confirm('Remove this login? The investor record itself will not be deleted.')){
-      deleteUserAccess(el.getAttribute('data-uid'));
-    }
-  }));
-
-  const invForm = document.getElementById('investorForm');
-  if(invForm) invForm.addEventListener('submit', e => submitInvestorForm(e, state.modal.payload.id));
+  const newInvForm = document.getElementById('newInvestorForm');
+  if(newInvForm) newInvForm.addEventListener('submit', submitNewInvestorForm);
+  const editInvInfoForm = document.getElementById('editInvestorInfoForm');
+  if(editInvInfoForm) editInvInfoForm.addEventListener('submit', e => submitEditInvestorInfo(e, state.modal.payload.invid));
+  const termForm = document.getElementById('termForm');
+  if(termForm) termForm.addEventListener('submit', e => submitTermForm(e, state.modal.payload.invid, state.modal.payload.termkey));
   const payForm = document.getElementById('payoutForm');
-  if(payForm) payForm.addEventListener('submit', e => submitPayout(e, state.modal.payload.id));
+  if(payForm) payForm.addEventListener('submit', e => submitPayout(e, state.modal.payload.invid, state.modal.payload.termkey, state.modal.payload.idx));
   const stForm = document.getElementById('studentForm');
   if(stForm) stForm.addEventListener('submit', e => submitStudentForm(e, state.modal.payload.id));
 }
