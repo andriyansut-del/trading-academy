@@ -124,8 +124,9 @@ thead .sticky-col{background:var(--surface);z-index:3;}
 .expand-arrow{display:inline-block;width:14px;color:var(--gold);font-family:var(--font-mono);}
 .term-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;}
 .term-card{background:var(--bg);border:1px solid var(--border);border-radius:4px;overflow:hidden;}
-.term-card-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--surface-2);}
+.term-card-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--surface-2);gap:6px;flex-wrap:wrap;}
 .term-card-head h4{font-family:var(--font-display);font-size:13.5px;font-weight:600;}
+.term-card-tags{display:flex;gap:6px;flex-wrap:wrap;}
 .term-card-body{padding:14px 16px;font-size:12.5px;line-height:2.1;}
 .term-card-body .krow{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--border);padding:3px 0;}
 .term-card-body .krow:last-child{border-bottom:none;}
@@ -221,6 +222,13 @@ function readDateDropdown(form, name){
 function termDropdown(name, selected){
   return `<select name="${name}" required>${[1,2,3,4,5].map(n=>`<option value="${n}" ${Number(selected)===n?'selected':''}>${TERM_LABELS[n]}</option>`).join('')}</select>`;
 }
+function investmentTypeDropdown(name, selected){
+  const val = selected || 'New';
+  return `<select name="${name}">
+    <option value="New" ${val==='New'?'selected':''}>New Money (adds to total capital)</option>
+    <option value="Renewal" ${val==='Renewal'?'selected':''}>Renewal (same capital continuing, no new funds)</option>
+  </select>`;
+}
 
 /* ---------------- ROI / due-date calculations ---------------- */
 function addMonths(dateStr, months){
@@ -269,8 +277,9 @@ function isPaidThisYear(t){
 }
 function isPaidCurrentPeriod(t){ return t.roiFrequency === 'Monthly' ? isPaidThisMonth(t) : isPaidThisYear(t); }
 function totalPaid(t){ return t.payoutHistory.reduce((s,p)=>s+p.amount,0); }
+function isNewMoney(t){ return (t.investmentType || 'New') === 'New'; }
 
-function investorTotalPrincipal(inv){ return inv.terms.reduce((s,t)=>s+t.principal,0); }
+function investorTotalPrincipal(inv){ return inv.terms.filter(isNewMoney).reduce((s,t)=>s+t.principal,0); }
 function investorTotalPaid(inv){ return inv.terms.reduce((s,t)=>s+totalPaid(t),0); }
 function totalPrincipalAll(){ return state.investors.reduce((s,i)=>s+investorTotalPrincipal(i),0); }
 function totalPaidAll(){ return state.investors.reduce((s,i)=>s+investorTotalPaid(i),0); }
@@ -397,6 +406,7 @@ async function submitNewInvestorForm(e){
     const investorId = uid();
     const termKey = uid();
     const termNumber = parseInt(f.termNumber.value,10);
+    const investmentType = f.investmentType.value;
     const principal = parseFloat(f.principal.value);
     const roiMonthlyPercent = parseFloat(f.roiMonthlyPercent.value)||0;
     const roiYearlyPercent = parseFloat(f.roiYearlyPercent.value)||0;
@@ -415,7 +425,7 @@ async function submitNewInvestorForm(e){
     const newInv = {
       id: investorId, name:f.name.value, email:f.email.value, phone:f.phone.value,
       terms: { [termKey]: sanitize({
-        termKey, termNumber, principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
+        termKey, termNumber, investmentType, principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
         investmentDate, lockInMonths, agreementFileUrl, agreementFileName, payoutHistory: []
       })}
     };
@@ -473,6 +483,7 @@ async function submitTermForm(e, investorId, termKey){
     const existingTerm = termKey ? inv.terms.find(t=>t.termKey===termKey) : null;
 
     const termNumber = parseInt(f.termNumber.value,10);
+    const investmentType = f.investmentType.value;
     const principal = parseFloat(f.principal.value);
     const roiMonthlyPercent = parseFloat(f.roiMonthlyPercent.value)||0;
     const roiYearlyPercent = parseFloat(f.roiYearlyPercent.value)||0;
@@ -490,7 +501,7 @@ async function submitTermForm(e, investorId, termKey){
     }
 
     const termData = {
-      termKey:key, termNumber, principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
+      termKey:key, termNumber, investmentType, principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
       investmentDate, lockInMonths, agreementFileUrl, agreementFileName,
       payoutHistory: existingTerm ? existingTerm.payoutHistory : []
     };
@@ -661,7 +672,7 @@ function renderOverview(){
   return `
     <div class="page-header"><div><div class="page-title">Overview</div><div class="page-sub">Both programs, at a glance.</div></div></div>
     <div class="stat-grid">
-      <div class="stat-card"><div class="stat-label">Total Investment Received</div><div class="stat-value gold">${fmtINR(totalPrincipal)}</div></div>
+      <div class="stat-card"><div class="stat-label">Total Investment Received (New Capital)</div><div class="stat-value gold">${fmtINR(totalPrincipal)}</div></div>
       <div class="stat-card"><div class="stat-label">Total Payouts Made</div><div class="stat-value teal">${fmtINR(paidOut)}</div></div>
       <div class="stat-card"><div class="stat-label">Pending Payouts (Unpaid)</div><div class="stat-value red">${fmtINR(pending)}</div></div>
       <div class="stat-card"><div class="stat-label">Monthly ROI Obligation</div><div class="stat-value">${fmtINR(monthlyObl)}</div></div>
@@ -680,11 +691,15 @@ function renderOverview(){
 
 function renderTermCard(inv, t){
   const periodPaid = isPaidCurrentPeriod(t);
+  const isNew = isNewMoney(t);
   return `
     <div class="term-card">
       <div class="term-card-head">
         <h4>${TERM_LABELS[t.termNumber]||('Term '+t.termNumber)}</h4>
-        <span class="tag ${t.roiFrequency==='Monthly'?'teal':'gold'}">${t.roiFrequency}</span>
+        <div class="term-card-tags">
+          <span class="tag ${isNew?'gold':'teal'}">${isNew?'New Money':'Renewal'}</span>
+          <span class="tag ${t.roiFrequency==='Monthly'?'teal':'gold'}">${t.roiFrequency}</span>
+        </div>
       </div>
       <div class="term-card-body">
         <div class="krow"><span class="klabel">Principal</span><span class="mono">${fmtINR(t.principal)}</span></div>
@@ -741,12 +756,12 @@ function renderInvestors(){
   const rows = state.investors.map(inv => renderInvestorRow(inv)).join('');
   return `
     <div class="page-header">
-      <div><div class="page-title">Invest &amp; Earn</div><div class="page-sub">Multi-term investor tracking. Total invested: <b style="color:var(--gold);">${fmtINR(totalPrincipalAll())}</b>. Click a name to expand.</div></div>
+      <div><div class="page-title">Invest &amp; Earn</div><div class="page-sub">Multi-term investor tracking. Total invested (new capital only): <b style="color:var(--gold);">${fmtINR(totalPrincipalAll())}</b>. Click a name to expand.</div></div>
       <button class="btn btn-primary" data-action="add-investor" style="width:auto;">+ Add Investor</button>
     </div>
     <div class="panel">
       <table>
-        <thead><tr><th>Investor</th><th>Terms</th><th>Total Principal</th><th>Total Paid</th></tr></thead>
+        <thead><tr><th>Investor</th><th>Terms</th><th>Total Principal (New)</th><th>Total Paid</th></tr></thead>
         <tbody>${rows || `<tr><td colspan="4"><div class="empty-state">No investors yet. Add your first one.</div></td></tr>`}</tbody>
       </table>
     </div>`;
@@ -854,7 +869,7 @@ function renderTermPortfolioBlock(inv, t){
   const periodPaid = isPaidCurrentPeriod(t);
   return `
     <div class="portfolio-hero">
-      <div class="hero-label">${TERM_LABELS[t.termNumber]||'Term'} — Principal Invested</div>
+      <div class="hero-label">${TERM_LABELS[t.termNumber]||'Term'} — Principal Invested ${isNewMoney(t)?'':'<span class="tag teal" style="margin-left:6px;">Renewal</span>'}</div>
       <div class="hero-value gold" style="color:var(--gold);">${fmtINR(t.principal)}</div>
       <div class="hero-grid">
         <div><div class="hero-label">Monthly ROI</div><div class="hero-value">${t.roiMonthlyPercent||0}%</div></div>
@@ -887,7 +902,7 @@ function renderInvestorPortfolio(user){
   const blocks = inv.terms.map(t => renderTermPortfolioBlock(inv, t)).join('');
   return `
     <div class="page-header">
-      <div><div class="page-title">My Portfolio</div><div class="page-sub">Welcome back, ${inv.name}. Total principal across all terms: <b style="color:var(--gold);">${fmtINR(totalPrincipal)}</b> · Total paid: <b style="color:var(--teal);">${fmtINR(totalAllPaid)}</b></div></div>
+      <div><div class="page-title">My Portfolio</div><div class="page-sub">Welcome back, ${inv.name}. Total capital invested: <b style="color:var(--gold);">${fmtINR(totalPrincipal)}</b> · Total paid: <b style="color:var(--teal);">${fmtINR(totalAllPaid)}</b></div></div>
     </div>
     ${blocks}`;
 }
@@ -908,6 +923,7 @@ function renderModal(){
             <div class="field"><label>Phone</label><input name="phone"></div>
           </div>
           <div class="field"><label>Term</label>${termDropdown('termNumber', 1)}</div>
+          <div class="field"><label>Investment Type</label>${investmentTypeDropdown('investmentType', 'New')}</div>
           <div class="field"><label>Invested Amount (₹)</label><input type="number" step="0.01" name="principal" required></div>
           <div class="field"><label>Date of Investment (DD-MM-YYYY)</label>${dateDropdown('investmentDate', todayStr())}</div>
           <div class="field"><label>Lock-in Period (months)</label><input type="number" step="1" min="0" name="lockInMonths" required></div>
@@ -981,6 +997,8 @@ function renderModal(){
         <h3>${t ? 'Edit Term — '+inv.name : 'Add Term — '+inv.name}</h3>
         <form id="termForm">
           <div class="field"><label>Term</label>${termDropdown('termNumber', t?t.termNumber:2)}</div>
+          <div class="field"><label>Investment Type</label>${investmentTypeDropdown('investmentType', t?t.investmentType:'Renewal')}</div>
+          <div class="field-hint">Choose <b>Renewal</b> if this term simply continues the same capital from a previous term (won't double-count in totals). Choose <b>New Money</b> if this is genuinely additional funds.</div>
           <div class="field"><label>Invested Amount (₹)</label><input type="number" step="0.01" name="principal" required value="${t?t.principal:''}"></div>
           <div class="field"><label>Date of Investment (DD-MM-YYYY)</label>${dateDropdown('investmentDate', t?t.investmentDate:todayStr())}</div>
           <div class="field"><label>Lock-in Period (months)</label><input type="number" step="1" min="0" name="lockInMonths" required value="${t?t.lockInMonths:''}"></div>
