@@ -59,7 +59,7 @@ input,select{font-family:inherit;}
 .user-chip{font-size:12px;color:var(--text-dim);margin-bottom:10px;}
 .user-chip b{color:var(--text);display:block;font-size:13px;}
 
-.main{flex:1;padding:28px 34px;overflow-x:auto;}
+.main{flex:1;padding:28px 34px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .page-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
 .page-title{font-family:var(--font-display);font-size:21px;font-weight:700;}
 .page-sub{color:var(--text-dim);font-size:12.5px;margin-top:4px;}
@@ -212,7 +212,13 @@ function addMonths(dateStr, months){
   d.setMonth(d.getMonth() + Number(months || 0));
   return toLocalISODate(d);
 }
-function investmentEndDate(t){ return addMonths(t.investmentDate, t.lockInMonths); }
+function investmentEndDate(t){
+  const raw = addMonths(t.investmentDate, t.lockInMonths);
+  if(!raw) return '';
+  const d = new Date(raw + 'T00:00:00');
+  d.setDate(d.getDate() - 1);
+  return toLocalISODate(d);
+}
 function monthlyAmount(t){ return t.principal * (t.roiMonthlyPercent || 0) / 100; }
 function yearlyAmount(t){ return t.principal * (t.roiYearlyPercent || 0) / 100; }
 function suggestedPayout(t){ return t.roiFrequency === 'Monthly' ? monthlyAmount(t) : yearlyAmount(t); }
@@ -365,7 +371,6 @@ async function createInvestorLogin(email, password, investorId, name){
 function openModal(type, payload){ state.modal = {type, payload: payload || {}}; render(); }
 function closeModal(){ state.modal = null; render(); }
 
-/* Add a brand-new investor with their first term */
 async function submitNewInvestorForm(e){
   e.preventDefault();
   const f = e.target;
@@ -423,7 +428,6 @@ async function submitEditInvestorInfo(e, investorId){
   }catch(err){ alert('Error saving investor info: ' + err.message); }
 }
 
-/* Add/edit a term for an existing investor */
 async function submitTermForm(e, investorId, termKey){
   e.preventDefault();
   const f = e.target;
@@ -477,7 +481,6 @@ async function deleteInvestor(id){
   }catch(err){ alert('Error deleting investor: ' + err.message); }
 }
 
-/* Record / edit a payout for a specific term */
 async function submitPayout(e, investorId, termKey, editIndex){
   e.preventDefault();
   const f = e.target;
