@@ -445,6 +445,23 @@ async function submitEditInvestorInfo(e, investorId){
   }catch(err){ alert('Error saving investor info: ' + err.message); }
 }
 
+async function submitAddLoginForm(e, investorId){
+  e.preventDefault();
+  const f = e.target;
+  const submitBtn = f.querySelector('button[type="submit"]');
+  if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Creating...'; }
+  try{
+    const inv = state.investors.find(x=>x.id===investorId);
+    const loginEmail = f.loginEmail.value.trim();
+    const loginPassword = f.loginPassword.value.trim();
+    await createInvestorLogin(loginEmail, loginPassword, investorId, inv.name);
+    closeModal();
+  }catch(err){
+    alert('Error creating login: ' + err.message);
+    if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = 'Create login'; }
+  }
+}
+
 async function submitTermForm(e, investorId, termKey){
   e.preventDefault();
   const f = e.target;
@@ -709,6 +726,7 @@ function renderInvestorRow(inv){
         <div class="investor-detail-actions">
           <button class="btn btn-ghost btn-sm" data-action="add-term" data-invid="${inv.id}">+ Add Term</button>
           <button class="btn btn-ghost btn-sm" data-action="edit-investor-info" data-invid="${inv.id}">Edit Info</button>
+          ${!inv.authUid ? `<button class="btn btn-ghost btn-sm" data-action="add-login" data-invid="${inv.id}" style="color:var(--teal);">+ Add Login</button>` : ''}
           <button class="btn btn-ghost btn-sm" data-action="delete-investor" data-invid="${inv.id}" style="color:var(--red);">Delete Investor</button>
         </div>
         <div class="term-card-grid">
@@ -938,6 +956,23 @@ function renderModal(){
       </div></div>`;
   }
 
+  if(type === 'add-login'){
+    const inv = state.investors.find(x=>x.id===payload.invid);
+    return `
+      <div class="modal-backdrop open"><div class="modal">
+        <h3>Add Login — ${inv.name}</h3>
+        <div class="field-hint" style="margin-top:0;">This creates a real sign-in for ${inv.name}, letting them view their own portfolio at this same site URL.</div>
+        <form id="addLoginForm">
+          <div class="field"><label>Login Email</label><input type="email" name="loginEmail" required></div>
+          <div class="field"><label>Login Password</label><input type="text" name="loginPassword" placeholder="min 6 characters" required></div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="width:auto;">Create login</button>
+          </div>
+        </form>
+      </div></div>`;
+  }
+
   if(type === 'add-term' || type === 'edit-term'){
     const inv = state.investors.find(x=>x.id===payload.invid);
     const t = payload.termkey ? inv.terms.find(x=>x.termKey===payload.termkey) : null;
@@ -1078,6 +1113,7 @@ function bindEvents(){
     if(confirm('Delete this term? All its payout history and agreement will be lost.')) deleteTerm(el.getAttribute('data-invid'), el.getAttribute('data-termkey'));
   }));
   document.querySelectorAll('[data-action="edit-investor-info"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openModal('edit-investor-info', {invid: el.getAttribute('data-invid')}); }));
+  document.querySelectorAll('[data-action="add-login"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openModal('add-login', {invid: el.getAttribute('data-invid')}); }));
   document.querySelectorAll('[data-action="delete-investor"]').forEach(el => el.addEventListener('click', (e) => {
     e.stopPropagation();
     if(confirm('Remove this investor and all their terms? This also removes their login if one exists.')) deleteInvestor(el.getAttribute('data-invid'));
@@ -1103,6 +1139,8 @@ function bindEvents(){
   if(newInvForm) newInvForm.addEventListener('submit', submitNewInvestorForm);
   const editInvInfoForm = document.getElementById('editInvestorInfoForm');
   if(editInvInfoForm) editInvInfoForm.addEventListener('submit', e => submitEditInvestorInfo(e, state.modal.payload.invid));
+  const addLoginForm = document.getElementById('addLoginForm');
+  if(addLoginForm) addLoginForm.addEventListener('submit', e => submitAddLoginForm(e, state.modal.payload.invid));
   const termForm = document.getElementById('termForm');
   if(termForm) termForm.addEventListener('submit', e => submitTermForm(e, state.modal.payload.invid, state.modal.payload.termkey));
   const payForm = document.getElementById('payoutForm');
