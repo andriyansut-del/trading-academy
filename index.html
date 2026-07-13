@@ -118,6 +118,22 @@ thead .sticky-col{background:var(--surface);z-index:3;}
 .logout-link{font-size:12px;color:var(--text-dim);border:1px solid var(--border);padding:6px 12px;border-radius:3px;}
 .logout-link:hover{color:var(--red);border-color:var(--red);background:transparent;}
 
+.investor-row{cursor:pointer;}
+.investor-row:hover{background:var(--surface-2);}
+.investor-row td{padding:16px 18px;}
+.expand-arrow{display:inline-block;width:14px;color:var(--gold);font-family:var(--font-mono);}
+.term-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;}
+.term-card{background:var(--bg);border:1px solid var(--border);border-radius:4px;overflow:hidden;}
+.term-card-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--surface-2);}
+.term-card-head h4{font-family:var(--font-display);font-size:13.5px;font-weight:600;}
+.term-card-body{padding:14px 16px;font-size:12.5px;line-height:2.1;}
+.term-card-body .krow{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--border);padding:3px 0;}
+.term-card-body .krow:last-child{border-bottom:none;}
+.term-card-body .klabel{color:var(--text-dim);}
+.term-card-actions{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;}
+.investor-detail-wrap{padding:18px;background:var(--bg);}
+.investor-detail-actions{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+
 ::-webkit-scrollbar{width:8px;height:8px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
@@ -161,7 +177,8 @@ let state = {
   adminTab:'overview',
   studentProgramFilter:'All',
   modal:null,
-  loginError:''
+  loginError:'',
+  expandedInvestorId:null
 };
 
 const root = document.getElementById('root');
@@ -205,7 +222,7 @@ function termDropdown(name, selected){
   return `<select name="${name}" required>${[1,2,3,4,5].map(n=>`<option value="${n}" ${Number(selected)===n?'selected':''}>${TERM_LABELS[n]}</option>`).join('')}</select>`;
 }
 
-/* ---------------- ROI / due-date calculations (operate on a "term" object) ---------------- */
+/* ---------------- ROI / due-date calculations ---------------- */
 function addMonths(dateStr, months){
   if(!dateStr) return '';
   const d = new Date(dateStr + 'T00:00:00');
@@ -644,69 +661,77 @@ function renderOverview(){
     </div>`;
 }
 
-function renderInvestorPanel(inv){
-  const invTotalPrincipal = investorTotalPrincipal(inv);
-  const invTotalPaid = investorTotalPaid(inv);
-  const termRows = inv.terms.map(t => {
-    const periodPaid = isPaidCurrentPeriod(t);
-    return `
-    <tr>
-      <td class="mono">${TERM_LABELS[t.termNumber]||('Term '+t.termNumber)}</td>
-      <td class="mono">${fmtINR(t.principal)}</td>
-      <td class="mono">${t.roiMonthlyPercent||0}%</td>
-      <td class="mono">${t.roiYearlyPercent||0}%</td>
-      <td><span class="tag ${t.roiFrequency==='Monthly'?'teal':'gold'}">${t.roiFrequency}</span></td>
-      <td class="mono">${formatDMY(t.investmentDate)}</td>
-      <td class="mono">${t.lockInMonths||0} mo</td>
-      <td class="mono">${formatDMY(investmentEndDate(t))}</td>
-      <td class="mono">${fmtINR(suggestedPayout(t))}</td>
-      <td class="mono">${formatDMY(nextDueDate(t))}</td>
-      <td><span class="tag ${periodPaid?'teal':'red'}">${periodPaid?'Paid':'Pending'}</span></td>
-      <td class="mono">${fmtINR(totalPaid(t))}</td>
-      <td class="mono">${t.payoutHistory.length?formatDMY(t.payoutHistory[0].date):'—'}</td>
-      <td>${t.agreementFileUrl ? `<a href="${t.agreementFileUrl}" target="_blank" style="color:var(--teal);">View</a>` : '<span style="color:var(--text-dim);">None</span>'}</td>
-      <td class="sticky-col">
-        <div class="row-actions">
-          <button class="btn btn-ghost btn-sm" data-action="pay" data-invid="${inv.id}" data-termkey="${t.termKey}">Payout</button>
-          <button class="btn btn-ghost btn-sm" data-action="history" data-invid="${inv.id}" data-termkey="${t.termKey}">History</button>
-          <button class="btn btn-ghost btn-sm" data-action="edit-term" data-invid="${inv.id}" data-termkey="${t.termKey}">Edit</button>
-          <button class="btn btn-ghost btn-sm" data-action="delete-term" data-invid="${inv.id}" data-termkey="${t.termKey}" style="color:var(--red);">Delete</button>
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
-
+function renderTermCard(inv, t){
+  const periodPaid = isPaidCurrentPeriod(t);
   return `
-    <div class="panel">
-      <div class="panel-head">
-        <div>
-          <h3>${inv.name} ${inv.authUid?'<span class="tag teal">Login active</span>':'<span class="tag red">No login</span>'}</h3>
-          <div style="color:var(--text-dim);font-size:11.5px;margin-top:4px;">${inv.email||''}${inv.phone?' · '+inv.phone:''} · Total principal: <b style="color:var(--gold);">${fmtINR(invTotalPrincipal)}</b> · Total paid: <b style="color:var(--teal);">${fmtINR(invTotalPaid)}</b></div>
-        </div>
-        <div class="row-actions">
+    <div class="term-card">
+      <div class="term-card-head">
+        <h4>${TERM_LABELS[t.termNumber]||('Term '+t.termNumber)}</h4>
+        <span class="tag ${t.roiFrequency==='Monthly'?'teal':'gold'}">${t.roiFrequency}</span>
+      </div>
+      <div class="term-card-body">
+        <div class="krow"><span class="klabel">Principal</span><span class="mono">${fmtINR(t.principal)}</span></div>
+        <div class="krow"><span class="klabel">Monthly / Yearly ROI</span><span class="mono">${t.roiMonthlyPercent||0}% / ${t.roiYearlyPercent||0}%</span></div>
+        <div class="krow"><span class="klabel">Investment Date</span><span class="mono">${formatDMY(t.investmentDate)}</span></div>
+        <div class="krow"><span class="klabel">Lock-in / End Date</span><span class="mono">${t.lockInMonths||0} mo · ${formatDMY(investmentEndDate(t))}</span></div>
+        <div class="krow"><span class="klabel">Payout Amount</span><span class="mono">${fmtINR(suggestedPayout(t))}</span></div>
+        <div class="krow"><span class="klabel">Next Due</span><span class="mono">${formatDMY(nextDueDate(t))}</span></div>
+        <div class="krow"><span class="klabel">Status</span><span class="tag ${periodPaid?'teal':'red'}">${periodPaid?'Paid':'Pending'}</span></div>
+        <div class="krow"><span class="klabel">Total Paid</span><span class="mono" style="color:var(--teal);">${fmtINR(totalPaid(t))}</span></div>
+        <div class="krow"><span class="klabel">Last Payout</span><span class="mono">${t.payoutHistory.length?formatDMY(t.payoutHistory[0].date):'—'}</span></div>
+        <div class="krow"><span class="klabel">Agreement</span><span>${t.agreementFileUrl ? `<a href="${t.agreementFileUrl}" target="_blank" style="color:var(--teal);">View</a>` : 'None'}</span></div>
+      </div>
+      <div class="term-card-actions">
+        <button class="btn btn-ghost btn-sm" data-action="pay" data-invid="${inv.id}" data-termkey="${t.termKey}">Payout</button>
+        <button class="btn btn-ghost btn-sm" data-action="history" data-invid="${inv.id}" data-termkey="${t.termKey}">History</button>
+        <button class="btn btn-ghost btn-sm" data-action="edit-term" data-invid="${inv.id}" data-termkey="${t.termKey}">Edit</button>
+        <button class="btn btn-ghost btn-sm" data-action="delete-term" data-invid="${inv.id}" data-termkey="${t.termKey}" style="color:var(--red);">Delete</button>
+      </div>
+    </div>`;
+}
+
+function renderInvestorRow(inv){
+  const isOpen = state.expandedInvestorId === inv.id;
+  const totalP = investorTotalPrincipal(inv);
+  const totalPd = investorTotalPaid(inv);
+  const mainRow = `
+    <tr class="investor-row" data-toggle-investor="${inv.id}">
+      <td><span class="expand-arrow">${isOpen?'▾':'▸'}</span> <b>${inv.name}</b> ${inv.authUid?'<span class="tag teal">Login</span>':'<span class="tag red">No login</span>'}
+        <div style="color:var(--text-dim);font-size:11px;margin-top:2px;">${inv.email||''}${inv.phone?' · '+inv.phone:''}</div>
+      </td>
+      <td class="mono">${inv.terms.length}</td>
+      <td class="mono">${fmtINR(totalP)}</td>
+      <td class="mono">${fmtINR(totalPd)}</td>
+    </tr>`;
+  const detailRow = isOpen ? `
+    <tr><td colspan="4" style="padding:0;">
+      <div class="investor-detail-wrap">
+        <div class="investor-detail-actions">
           <button class="btn btn-ghost btn-sm" data-action="add-term" data-invid="${inv.id}">+ Add Term</button>
           <button class="btn btn-ghost btn-sm" data-action="edit-investor-info" data-invid="${inv.id}">Edit Info</button>
           <button class="btn btn-ghost btn-sm" data-action="delete-investor" data-invid="${inv.id}" style="color:var(--red);">Delete Investor</button>
         </div>
+        <div class="term-card-grid">
+          ${inv.terms.length ? inv.terms.map(t => renderTermCard(inv, t)).join('') : `<div class="empty-state">No terms yet. Click "+ Add Term".</div>`}
+        </div>
       </div>
-      <table>
-        <thead><tr>
-          <th>Term</th><th>Principal</th><th>Monthly ROI%</th><th>Yearly ROI%</th><th>Frequency</th>
-          <th>Investment Date</th><th>Lock-in</th><th>End Date</th><th>Payout Amount</th><th>Next Due</th><th>Status</th><th>Total Paid</th><th>Last Payout</th><th>Agreement</th><th class="sticky-col">Actions</th>
-        </tr></thead>
-        <tbody>${termRows || `<tr><td colspan="15"><div class="empty-state">No terms yet. Click "+ Add Term".</div></td></tr>`}</tbody>
-      </table>
-    </div>`;
+    </td></tr>` : '';
+  return mainRow + detailRow;
 }
 
 function renderInvestors(){
-  const panels = state.investors.map(inv => renderInvestorPanel(inv)).join('');
+  const rows = state.investors.map(inv => renderInvestorRow(inv)).join('');
   return `
     <div class="page-header">
-      <div><div class="page-title">Invest &amp; Earn</div><div class="page-sub">Multi-term investor tracking. Total invested: <b style="color:var(--gold);">${fmtINR(totalPrincipalAll())}</b></div></div>
+      <div><div class="page-title">Invest &amp; Earn</div><div class="page-sub">Multi-term investor tracking. Total invested: <b style="color:var(--gold);">${fmtINR(totalPrincipalAll())}</b>. Click a name to expand.</div></div>
       <button class="btn btn-primary" data-action="add-investor" style="width:auto;">+ Add Investor</button>
     </div>
-    ${panels || `<div class="panel"><div class="empty-state">No investors yet. Add your first one.</div></div>`}`;
+    <div class="panel">
+      <table>
+        <thead><tr><th>Investor</th><th>Terms</th><th>Total Principal</th><th>Total Paid</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="4"><div class="empty-state">No investors yet. Add your first one.</div></td></tr>`}</tbody>
+      </table>
+    </div>`;
 }
 
 function renderPayoutsDue(){
@@ -1035,25 +1060,34 @@ function bindEvents(){
   document.querySelectorAll('[data-filter]').forEach(el => el.addEventListener('click', () => { state.studentProgramFilter = el.getAttribute('data-filter'); render(); }));
   document.querySelectorAll('[data-action="close-modal"]').forEach(el => el.addEventListener('click', closeModal));
 
+  document.querySelectorAll('[data-toggle-investor]').forEach(el => el.addEventListener('click', () => {
+    const id = el.getAttribute('data-toggle-investor');
+    state.expandedInvestorId = state.expandedInvestorId === id ? null : id;
+    render();
+  }));
+
   const addInvBtn = document.querySelector('[data-action="add-investor"]');
   if(addInvBtn) addInvBtn.addEventListener('click', () => openModal('add-investor'));
   const addStBtn = document.querySelector('[data-action="add-student"]');
   if(addStBtn) addStBtn.addEventListener('click', () => openModal('add-student'));
 
-  document.querySelectorAll('[data-action="add-term"]').forEach(el => el.addEventListener('click', () => openModal('add-term', {invid: el.getAttribute('data-invid')})));
-  document.querySelectorAll('[data-action="edit-term"]').forEach(el => el.addEventListener('click', () => openModal('edit-term', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey')})));
-  document.querySelectorAll('[data-action="delete-term"]').forEach(el => el.addEventListener('click', () => {
+  document.querySelectorAll('[data-action="add-term"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openModal('add-term', {invid: el.getAttribute('data-invid')}); }));
+  document.querySelectorAll('[data-action="edit-term"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openModal('edit-term', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey')}); }));
+  document.querySelectorAll('[data-action="delete-term"]').forEach(el => el.addEventListener('click', (e) => {
+    e.stopPropagation();
     if(confirm('Delete this term? All its payout history and agreement will be lost.')) deleteTerm(el.getAttribute('data-invid'), el.getAttribute('data-termkey'));
   }));
-  document.querySelectorAll('[data-action="edit-investor-info"]').forEach(el => el.addEventListener('click', () => openModal('edit-investor-info', {invid: el.getAttribute('data-invid')})));
-  document.querySelectorAll('[data-action="delete-investor"]').forEach(el => el.addEventListener('click', () => {
+  document.querySelectorAll('[data-action="edit-investor-info"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openModal('edit-investor-info', {invid: el.getAttribute('data-invid')}); }));
+  document.querySelectorAll('[data-action="delete-investor"]').forEach(el => el.addEventListener('click', (e) => {
+    e.stopPropagation();
     if(confirm('Remove this investor and all their terms? This also removes their login if one exists.')) deleteInvestor(el.getAttribute('data-invid'));
   }));
 
-  document.querySelectorAll('[data-action="pay"]').forEach(el => el.addEventListener('click', () => openModal('pay', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey')})));
-  document.querySelectorAll('[data-action="history"]').forEach(el => el.addEventListener('click', () => openModal('history', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey')})));
-  document.querySelectorAll('[data-action="edit-payout"]').forEach(el => el.addEventListener('click', () => openModal('edit-payout', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey'), idx: parseInt(el.getAttribute('data-idx'),10)})));
-  document.querySelectorAll('[data-action="delete-payout"]').forEach(el => el.addEventListener('click', () => {
+  document.querySelectorAll('[data-action="pay"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openModal('pay', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey')}); }));
+  document.querySelectorAll('[data-action="history"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openModal('history', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey')}); }));
+  document.querySelectorAll('[data-action="edit-payout"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openModal('edit-payout', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey'), idx: parseInt(el.getAttribute('data-idx'),10)}); }));
+  document.querySelectorAll('[data-action="delete-payout"]').forEach(el => el.addEventListener('click', (e) => {
+    e.stopPropagation();
     if(confirm('Delete this payout record? This cannot be undone.')){
       const invid = el.getAttribute('data-invid'), termkey = el.getAttribute('data-termkey');
       deletePayout(invid, termkey, parseInt(el.getAttribute('data-idx'),10));
