@@ -138,6 +138,7 @@ input,select{font-family:inherit;}
   width:100%;
 }
 .btn-primary:hover{background:#e0b45a;}
+.btn-primary:disabled{opacity:0.6;cursor:not-allowed;}
 .btn-ghost{
   background:transparent;
   border:1px solid var(--border);
@@ -419,56 +420,44 @@ thead .sticky-col{background:var(--surface);z-index:3;}
 
 <div id="root"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
 <script>
+/* ================= Firebase init ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyDNkFBLq_IC13PrR6WkevKMQNuyjyDxiR0",
+  authDomain: "nathan-trading-academy.firebaseapp.com",
+  databaseURL: "https://nathan-trading-academy-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "nathan-trading-academy",
+  storageBucket: "nathan-trading-academy.firebasestorage.app",
+  messagingSenderId: "581838392204",
+  appId: "1:581838392204:web:8b729d75eca8fdcc8aa4a9"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
 const PROGRAMS = ["Intraday Trading","Option Trading","Swing Trading","Commodity Trading","Investment Trading","Crypto Trading","Forex Trading"];
 const FEE_STATUSES = ["Paid","Pending","Partial"];
-const STORAGE_PREFIX = 'nta_';
 
 let state = {
   ready:false,
-  currentUser:null,
-  users:[],
+  currentUser:null,      // {uid, email, role, name, investorId}
   investors:[],
   students:[],
+  allUsers:[],            // admin only: list of {uid, role, name, email, investorId}
   adminTab:'overview',
   studentProgramFilter:'All',
   modal:null,
-  loginError:''
+  loginError:'',
+  actionError:''
 };
 
 const root = document.getElementById('root');
 const fmtINR = n => '₹' + Number(n||0).toLocaleString('en-IN', {maximumFractionDigits:0});
 const uid = () => 't' + Math.random().toString(36).slice(2,10);
-
-function storageGet(key){
-  try{
-    const raw = localStorage.getItem(STORAGE_PREFIX + key);
-    return raw ? JSON.parse(raw) : null;
-  }catch(e){ return null; }
-}
-function storageSet(key, value){
-  try{
-    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
-    return true;
-  }catch(e){ return false; }
-}
-
-function loadAll(){
-  state.users = storageGet('users') || [];
-  state.investors = storageGet('investors') || [];
-  state.students = storageGet('students') || [];
-
-  if(state.users.length === 0){
-    state.users = [{username:'admin', password:'admin123', role:'admin', name:'Academy Admin'}];
-    storageSet('users', state.users);
-  }
-  state.ready = true;
-  render();
-}
-
-function saveUsers(){ storageSet('users', state.users); }
-function saveInvestors(){ storageSet('investors', state.investors); }
-function saveStudents(){ storageSet('students', state.students); }
 
 /* ---------------- Date helpers (local-time safe, no UTC drift) ---------------- */
 function toLocalISODate(d){
@@ -486,7 +475,6 @@ function formatDMY(iso){
   return `${d}-${m}-${y}`;
 }
 
-/* Dropdown date picker: three <select> elements, DD-MM-YYYY */
 function dateDropdown(name, isoValue){
   const parts = isoValue ? isoValue.split('-') : [];
   const y = parts[0] || '';
@@ -541,7 +529,6 @@ function yearlyAmount(inv){
 function suggestedPayout(inv){
   return inv.roiFrequency === 'Monthly' ? monthlyAmount(inv) : yearlyAmount(inv);
 }
-
 function firstSaturday(year, month){
   const d = new Date(year, month, 1);
   const day = d.getDay();
@@ -602,22 +589,132 @@ function yearlyPendingTotal(){
   return state.investors.filter(i=>i.roiFrequency==='Yearly' && !isPaidThisYear(i)).reduce((s,i)=>s+yearlyAmount(i),0);
 }
 
-/* ---------------- Auth actions ---------------- */
-function tryLogin(username, password){
-  const u = state.users.find(x => x.username === username && x.password === password);
-  if(!u){ state.loginError = 'Invalid username or password.'; render(); return; }
-  state.currentUser = u;
-  state.loginError = '';
-  state.adminTab = u.role === 'admin' ? 'overview' : 'portfolio';
+/* ---------------- Firebase helpers ---------------- */
+function sanitize(obj){
+  const out = {};
+  Object.keys(obj).forEach(k => { if(obj[k] !== undefined) out[k] = obj[k]; });
+  return out;
+}
+function normalizeInvestor(raw){
+  return {...raw, payoutHistory: raw.payoutHistory ? Object.values(raw.payoutHistory) : []};
+}
+
+/* ---------------- Auth wiring ---------------- */
+let loadFlags = {investors:false, students:false};
+function checkAdminReady(){
+  if(loadFlags.investors && loadFlags.students){ state.ready = true; }
   render();
 }
-function logout(){ state.currentUser = null; render(); }
+
+function detachAllListeners(){
+  db.ref('nta/investors').off();
+  db.ref('nta/students').off();
+  db.ref('nta/roles').off();
+}
+
+function attachListeners(){
+  if(state.currentUser.role === 'admin'){
+    loadFlags = {investors:false, students:false};
+    db.ref('nta/investors').on('value', snap => {
+      const val = snap.val() || {};
+      state.investors = Object.keys(val).map(k => normalizeInvestor(val[k]));
+      loadFlags.investors = true;
+      checkAdminReady();
+    });
+    db.ref('nta/students').on('value', snap => {
+      const val = snap.val() || {};
+      state.students = Object.keys(val).map(k => val[k]);
+      loadFlags.students = true;
+      checkAdminReady();
+    });
+    db.ref('nta/roles').on('value', snap => {
+      const val = snap.val() || {};
+      state.allUsers = Object.keys(val).map(u => ({uid:u, ...val[u]}));
+      render();
+    });
+  } else if(state.currentUser.role === 'investor' && state.currentUser.investorId){
+    db.ref('nta/investors/'+state.currentUser.investorId).on('value', snap => {
+      const val = snap.val();
+      state.investors = val ? [normalizeInvestor(val)] : [];
+      state.ready = true;
+      render();
+    });
+  } else {
+    state.ready = true;
+    render();
+  }
+}
+
+auth.onAuthStateChanged(user => {
+  detachAllListeners();
+  state.investors = [];
+  state.students = [];
+  state.allUsers = [];
+  state.actionError = '';
+
+  if(!user){
+    state.currentUser = null;
+    state.ready = true;
+    render();
+    return;
+  }
+
+  db.ref('nta/roles/'+user.uid).once('value').then(snap => {
+    const roleData = snap.val();
+    if(!roleData){
+      state.loginError = 'No role assigned to this account. Contact the academy admin.';
+      state.currentUser = null;
+      state.ready = true;
+      auth.signOut();
+      render();
+      return;
+    }
+    state.currentUser = {
+      uid: user.uid,
+      email: user.email,
+      role: roleData.role,
+      name: roleData.name || (roleData.role === 'admin' ? 'Academy Admin' : 'Investor'),
+      investorId: roleData.investorId || null
+    };
+    state.loginError = '';
+    state.adminTab = roleData.role === 'admin' ? 'overview' : 'portfolio';
+    attachListeners();
+  }).catch(err => {
+    state.loginError = 'Error loading account role: ' + err.message;
+    state.currentUser = null;
+    state.ready = true;
+    render();
+  });
+});
+
+function tryLogin(email, password){
+  state.loginError = '';
+  auth.signInWithEmailAndPassword(email, password).catch(err => {
+    state.loginError = 'Invalid email or password.';
+    render();
+  });
+}
+function logout(){ auth.signOut(); }
+
+/* Create an investor login without logging the admin out */
+async function createInvestorLogin(email, password, investorId, name){
+  const secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary_' + Date.now());
+  try{
+    const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, password);
+    const newUid = cred.user.uid;
+    await db.ref('nta/roles/'+newUid).set({role:'investor', investorId, name, email});
+    await db.ref('nta/investors/'+investorId+'/authUid').set(newUid);
+    await secondaryApp.auth().signOut();
+  } finally {
+    await secondaryApp.delete();
+  }
+}
 
 /* ---------------- Modals ---------------- */
 function openModal(type, payload){ state.modal = {type, payload: payload || {}}; render(); }
 function closeModal(){ state.modal = null; render(); }
 
-function submitInvestorForm(e, editId){
+async function submitInvestorForm(e, editId){
   e.preventDefault();
   const f = e.target;
   const principal = parseFloat(f.principal.value);
@@ -626,88 +723,125 @@ function submitInvestorForm(e, editId){
   const roiFrequency = f.roiFrequency.value;
   const investmentDate = readDateDropdown(f, 'investmentDate');
   const lockInMonths = parseInt(f.lockInMonths.value, 10) || 0;
+  const submitBtn = f.querySelector('button[type="submit"]');
+  if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
 
-  if(editId){
-    const inv = state.investors.find(x => x.id === editId);
-    Object.assign(inv, {
-      name:f.name.value, email:f.email.value, phone:f.phone.value,
-      principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
-      investmentDate, lockInMonths
-    });
-  } else {
-    const id = uid();
-    state.investors.push({
-      id, name:f.name.value, email:f.email.value, phone:f.phone.value,
-      principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
-      investmentDate, lockInMonths,
-      payoutHistory:[]
-    });
-    if(f.createLogin.checked){
-      const username = f.loginUsername.value.trim();
-      const password = f.loginPassword.value.trim();
-      if(username && password){
-        state.users = state.users.filter(u => u.username !== username);
-        state.users.push({username, password, role:'investor', name:f.name.value, investorId:id});
-        saveUsers();
+  try{
+    if(editId){
+      const existing = state.investors.find(x => x.id === editId);
+      const updated = {
+        ...existing,
+        name:f.name.value, email:f.email.value, phone:f.phone.value,
+        principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
+        investmentDate, lockInMonths
+      };
+      await db.ref('nta/investors/'+editId).set(sanitize(updated));
+    } else {
+      const id = uid();
+      const newInv = {
+        id, name:f.name.value, email:f.email.value, phone:f.phone.value,
+        principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
+        investmentDate, lockInMonths,
+        payoutHistory:[]
+      };
+      await db.ref('nta/investors/'+id).set(sanitize(newInv));
+      if(f.createLogin && f.createLogin.checked){
+        const loginEmail = f.loginEmail.value.trim();
+        const loginPassword = f.loginPassword.value.trim();
+        if(loginEmail && loginPassword){
+          try{
+            await createInvestorLogin(loginEmail, loginPassword, id, newInv.name);
+          }catch(err){
+            alert('Investor saved, but creating their login failed: ' + err.message);
+          }
+        }
       }
     }
+    closeModal();
+  }catch(err){
+    alert('Error saving investor: ' + err.message);
+    if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = editId?'Save changes':'Add investor'; }
   }
-  saveInvestors();
-  closeModal();
 }
 
-function submitPayout(e, investorId){
+async function submitPayout(e, investorId){
   e.preventDefault();
   const f = e.target;
   const inv = state.investors.find(x => x.id === investorId);
   const date = readDateDropdown(f, 'date');
-  inv.payoutHistory.push({date, amount: parseFloat(f.amount.value), note:f.note.value || ''});
-  inv.payoutHistory.sort((a,b) => a.date < b.date ? 1 : -1);
-  saveInvestors();
-  closeModal();
+  const newHistory = [...inv.payoutHistory, {date, amount: parseFloat(f.amount.value), note:f.note.value || ''}];
+  newHistory.sort((a,b) => a.date < b.date ? 1 : -1);
+  try{
+    await db.ref('nta/investors/'+investorId+'/payoutHistory').set(newHistory);
+    closeModal();
+  }catch(err){
+    alert('Error saving payout: ' + err.message);
+  }
 }
 
-function deletePayout(investorId, index){
+async function deletePayout(investorId, index){
   const inv = state.investors.find(x => x.id === investorId);
   if(!inv) return;
-  inv.payoutHistory.splice(index, 1);
-  saveInvestors();
-  render();
+  const newHistory = inv.payoutHistory.filter((_,i) => i!==index);
+  try{
+    await db.ref('nta/investors/'+investorId+'/payoutHistory').set(newHistory);
+  }catch(err){
+    alert('Error deleting payout: ' + err.message);
+  }
 }
 
-function deleteInvestor(id){
-  state.investors = state.investors.filter(x => x.id !== id);
-  state.users = state.users.filter(u => u.investorId !== id);
-  saveInvestors(); saveUsers();
-  render();
+async function deleteInvestor(id){
+  const inv = state.investors.find(x => x.id === id);
+  try{
+    await db.ref('nta/investors/'+id).remove();
+    if(inv && inv.authUid){
+      await db.ref('nta/roles/'+inv.authUid).remove();
+    }
+  }catch(err){
+    alert('Error deleting investor: ' + err.message);
+  }
 }
 
-function submitStudentForm(e, editId){
+async function submitStudentForm(e, editId){
   e.preventDefault();
   const f = e.target;
-  if(editId){
-    const st = state.students.find(x => x.id === editId);
-    Object.assign(st, {
-      name:f.name.value, email:f.email.value, phone:f.phone.value,
-      program:f.program.value, fee:parseFloat(f.fee.value), feeStatus:f.feeStatus.value
-    });
-  } else {
-    state.students.push({
-      id: uid(), name:f.name.value, email:f.email.value, phone:f.phone.value,
-      program:f.program.value, fee:parseFloat(f.fee.value), feeStatus:f.feeStatus.value,
-      enrollDate: todayStr()
-    });
+  try{
+    if(editId){
+      const existing = state.students.find(x => x.id === editId);
+      const updated = {
+        ...existing,
+        name:f.name.value, email:f.email.value, phone:f.phone.value,
+        program:f.program.value, fee:parseFloat(f.fee.value), feeStatus:f.feeStatus.value
+      };
+      await db.ref('nta/students/'+editId).set(sanitize(updated));
+    } else {
+      const id = uid();
+      const newSt = {
+        id, name:f.name.value, email:f.email.value, phone:f.phone.value,
+        program:f.program.value, fee:parseFloat(f.fee.value), feeStatus:f.feeStatus.value,
+        enrollDate: todayStr()
+      };
+      await db.ref('nta/students/'+id).set(sanitize(newSt));
+    }
+    closeModal();
+  }catch(err){
+    alert('Error saving student: ' + err.message);
   }
-  saveStudents();
-  closeModal();
 }
-function deleteStudent(id){
-  state.students = state.students.filter(x => x.id !== id);
-  saveStudents();
-  render();
+async function deleteStudent(id){
+  try{
+    await db.ref('nta/students/'+id).remove();
+  }catch(err){
+    alert('Error deleting student: ' + err.message);
+  }
 }
-
-window.addEventListener('DOMContentLoaded', loadAll);
+async function deleteUserAccess(targetUid){
+  try{
+    await db.ref('nta/roles/'+targetUid).remove();
+  }catch(err){
+    alert('Error removing login: ' + err.message);
+  }
+}
 
 /* ================= RENDER ================= */
 function render(){
@@ -731,7 +865,6 @@ function renderTicker(){
 
 function renderLogin(){
   return `
-    ${renderTicker()}
     <div class="login-screen">
       <div class="login-card">
         <div class="brand-eyebrow">Nathan Trading Academy</div>
@@ -740,8 +873,8 @@ function renderLogin(){
         ${state.loginError ? `<div class="login-error">${state.loginError}</div>` : ''}
         <form id="loginForm">
           <div class="field">
-            <label>Username</label>
-            <input type="text" name="username" autocomplete="username" required>
+            <label>Email</label>
+            <input type="email" name="email" autocomplete="username" required>
           </div>
           <div class="field">
             <label>Password</label>
@@ -750,8 +883,8 @@ function renderLogin(){
           <button class="btn btn-primary" type="submit">Sign In</button>
         </form>
         <div class="demo-note">
-          Default admin login — <b>admin</b> / <b>admin123</b><br>
-          Change this once you're in, and create investor logins from the Investors tab.
+          Sign in with your registered email and password.<br>
+          Investor logins are created by the admin from the Invest &amp; Earn tab.
         </div>
       </div>
     </div>
@@ -781,7 +914,7 @@ function renderApp(){
           `).join('')}
         </div>
         <div class="sidebar-footer">
-          <div class="user-chip"><b>${state.currentUser.name}</b>${state.currentUser.role}</div>
+          <div class="user-chip"><b>${state.currentUser.name}</b>${state.currentUser.email}<br>${state.currentUser.role}</div>
           <button class="btn btn-ghost btn-sm" id="logoutBtn" style="width:100%;">Log out</button>
         </div>
       </div>
@@ -864,6 +997,7 @@ function renderInvestors(){
       <td><span class="tag ${periodPaid?'teal':'red'}">${periodPaid?'Paid':'Pending'}</span></td>
       <td class="mono">${fmtINR(totalPaid(inv))}</td>
       <td class="mono">${inv.payoutHistory.length ? formatDMY(inv.payoutHistory[0].date) : '—'}</td>
+      <td>${inv.authUid ? '<span class="tag teal">Login active</span>' : '<span class="tag red">No login</span>'}</td>
       <td class="sticky-col">
         <div class="row-actions">
           <button class="btn btn-ghost btn-sm" data-action="pay" data-id="${inv.id}">Record payout</button>
@@ -887,9 +1021,9 @@ function renderInvestors(){
       <table>
         <thead><tr>
           <th>Investor</th><th>Principal</th><th>Monthly ROI %</th><th>Yearly ROI %</th><th>Frequency</th>
-          <th>Investment Date</th><th>Lock-in</th><th>End Date</th><th>Payout Amount</th><th>Next Due Date</th><th>Current Period</th><th>Total Paid</th><th>Last Payout</th><th class="sticky-col">Actions</th>
+          <th>Investment Date</th><th>Lock-in</th><th>End Date</th><th>Payout Amount</th><th>Next Due Date</th><th>Current Period</th><th>Total Paid</th><th>Last Payout</th><th>Login</th><th class="sticky-col">Actions</th>
         </tr></thead>
-        <tbody>${rows || `<tr><td colspan="14"><div class="empty-state">No investors yet. Add your first one.</div></td></tr>`}</tbody>
+        <tbody>${rows || `<tr><td colspan="15"><div class="empty-state">No investors yet. Add your first one.</div></td></tr>`}</tbody>
       </table>
     </div>
   `;
@@ -1004,13 +1138,13 @@ function renderStudents(){
 }
 
 function renderAccess(){
-  const rows = state.users.map(u => `
+  const rows = state.allUsers.map(u => `
     <tr>
-      <td>${u.username}</td>
+      <td>${u.email || '—'}</td>
       <td>${u.name||'—'}</td>
       <td><span class="tag ${u.role==='admin'?'gold':'teal'}">${u.role}</span></td>
       <td>
-        ${u.username !== 'admin' ? `<button class="btn btn-ghost btn-sm" data-action="delete-user" data-username="${u.username}" style="color:var(--red);">Remove</button>` : '<span style="color:var(--text-dim);font-size:12px;">protected</span>'}
+        ${u.role !== 'admin' ? `<button class="btn btn-ghost btn-sm" data-action="delete-user" data-uid="${u.uid}" style="color:var(--red);">Remove</button>` : '<span style="color:var(--text-dim);font-size:12px;">protected</span>'}
       </td>
     </tr>
   `).join('');
@@ -1023,8 +1157,8 @@ function renderAccess(){
     </div>
     <div class="panel">
       <table>
-        <thead><tr><th>Username</th><th>Name</th><th>Role</th><th></th></tr></thead>
-        <tbody>${rows}</tbody>
+        <thead><tr><th>Email</th><th>Name</th><th>Role</th><th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="4"><div class="empty-state">No users found.</div></td></tr>`}</tbody>
       </table>
     </div>
   `;
@@ -1117,8 +1251,8 @@ function renderModal(){
             <label for="createLogin" style="margin:0;">Create an investor login now</label>
           </div>
           <div class="field-row">
-            <div class="field"><label>Login Username</label><input name="loginUsername"></div>
-            <div class="field"><label>Login Password</label><input name="loginPassword"></div>
+            <div class="field"><label>Login Email</label><input type="email" name="loginEmail"></div>
+            <div class="field"><label>Login Password</label><input type="text" name="loginPassword" placeholder="min 6 characters"></div>
           </div>
           ` : ''}
           <div class="modal-actions">
@@ -1219,7 +1353,7 @@ function bindEvents(){
   const loginForm = document.getElementById('loginForm');
   if(loginForm) loginForm.addEventListener('submit', e => {
     e.preventDefault();
-    tryLogin(e.target.username.value.trim(), e.target.password.value);
+    tryLogin(e.target.email.value.trim(), e.target.password.value);
   });
 
   const logoutBtn = document.getElementById('logoutBtn');
@@ -1259,9 +1393,8 @@ function bindEvents(){
   }));
 
   document.querySelectorAll('[data-action="delete-user"]').forEach(el => el.addEventListener('click', () => {
-    if(confirm('Remove this login?')){
-      state.users = state.users.filter(u => u.username !== el.getAttribute('data-username'));
-      saveUsers(); render();
+    if(confirm('Remove this login? The investor record itself will not be deleted.')){
+      deleteUserAccess(el.getAttribute('data-uid'));
     }
   }));
 
@@ -1272,6 +1405,8 @@ function bindEvents(){
   const stForm = document.getElementById('studentForm');
   if(stForm) stForm.addEventListener('submit', e => submitStudentForm(e, state.modal.payload.id));
 }
+
+render();
 </script>
 </body>
 </html>
