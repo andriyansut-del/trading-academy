@@ -97,6 +97,7 @@ thead .sticky-col{background:var(--surface);z-index:3;}
 .modal-backdrop{position:fixed;inset:0;background:rgba(6,9,17,0.72);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
 .modal-backdrop.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:4px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:24px;}
+.modal.wide{max-width:640px;}
 .modal h3{font-family:var(--font-display);font-size:16px;margin-bottom:18px;}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -105,9 +106,10 @@ thead .sticky-col{background:var(--surface);z-index:3;}
 .date-dropdown-row{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:8px;}
 .date-dropdown-row select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 8px;border-radius:3px;font-size:13px;outline:none;}
 
-.tabs-bar{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+.tabs-bar{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
 .chip-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-dim);padding:7px 13px;border-radius:16px;font-size:12px;}
 .chip-btn.active{border-color:var(--gold);color:var(--gold);}
+.sort-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;margin-right:4px;}
 
 .portfolio-hero{background:linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);border:1px solid var(--border);border-radius:4px;padding:26px;margin-bottom:22px;position:relative;overflow:hidden;}
 .portfolio-hero::after{content:'';position:absolute;top:0;right:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--gold),var(--teal));}
@@ -137,6 +139,7 @@ thead .sticky-col{background:var(--surface);z-index:3;}
 .term-card-actions{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;}
 .investor-detail-wrap{padding:18px;background:var(--bg);}
 .investor-detail-actions{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.schedule-check{width:17px;height:17px;cursor:pointer;accent-color:var(--teal);}
 
 ::-webkit-scrollbar{width:8px;height:8px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
@@ -182,7 +185,9 @@ let state = {
   studentProgramFilter:'All',
   modal:null,
   loginError:'',
-  expandedInvestorId:null
+  expandedInvestorId:null,
+  investorSort:'name',
+  investorSortDir:'asc'
 };
 
 const root = document.getElementById('root');
@@ -202,6 +207,7 @@ function formatDMY(iso){
   const [y,m,d] = parts;
   return `${d}-${m}-${y}`;
 }
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 function dateDropdown(name, isoValue){
   const parts = isoValue ? isoValue.split('-') : [];
   const y = parts[0] || ''; const m = parts[1] || ''; const d = parts[2] || '';
@@ -296,6 +302,10 @@ function isNewMoney(t){ return (t.investmentType || 'New') === 'New'; }
 
 function investorTotalPrincipal(inv){ return inv.terms.filter(isNewMoney).reduce((s,t)=>s+t.principal,0); }
 function investorTotalPaid(inv){ return inv.terms.reduce((s,t)=>s+totalPaid(t),0); }
+function investorFirstInvestmentDate(inv){
+  if(!inv.terms.length) return '';
+  return inv.terms.reduce((min,t)=> (t.investmentDate && (!min || t.investmentDate < min)) ? t.investmentDate : min, '');
+}
 function totalPrincipalAll(){ return state.investors.reduce((s,i)=>s+investorTotalPrincipal(i),0); }
 function totalPaidAll(){ return state.investors.reduce((s,i)=>s+investorTotalPaid(i),0); }
 function allTermsFlat(){
@@ -315,6 +325,45 @@ function monthlyObligationTotal(){
 }
 function yearlyObligationTotal(){
   return activeTermsFlat().filter(x=>x.term.roiFrequency==='Yearly').reduce((s,x)=>s+yearlyAmount(x.term),0);
+}
+
+/* ---------------- Payment schedule generation ---------------- */
+function generateSchedule(t){
+  const periods = [];
+  if(!t.investmentDate) return periods;
+  const start = new Date(t.investmentDate + 'T00:00:00');
+  const endIso = investmentEndDate(t);
+  const end = endIso ? new Date(endIso + 'T00:00:00') : null;
+  if(!end) return periods;
+
+  if(t.roiFrequency === 'Monthly'){
+    let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+    let i = 0;
+    while(cursor <= end && i < 240){
+      const periodKey = `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`;
+      const label = `${MONTH_NAMES[cursor.getMonth()]} ${cursor.getFullYear()}`;
+      let dueMonth = cursor.getMonth() + 1, dueYear = cursor.getFullYear();
+      if(dueMonth > 11){ dueMonth = 0; dueYear++; }
+      const due = firstSaturday(dueYear, dueMonth);
+      periods.push({periodKey, label, dueDate: toLocalISODate(due), amount: monthlyAmount(t)});
+      cursor.setMonth(cursor.getMonth()+1);
+      i++;
+    }
+  } else {
+    let cursor = new Date(start);
+    let yearNum = 1;
+    let i = 0;
+    while(cursor <= end && i < 50){
+      const anniv = new Date(cursor.getFullYear()+1, cursor.getMonth(), cursor.getDate());
+      const periodKey = `year${yearNum}`;
+      const label = `Year ${yearNum} (${formatDMY(toLocalISODate(cursor))} \u2013 ${formatDMY(toLocalISODate(new Date(anniv.getTime()-86400000)))})`;
+      periods.push({periodKey, label, dueDate: toLocalISODate(anniv), amount: yearlyAmount(t)});
+      cursor = anniv;
+      yearNum++;
+      i++;
+    }
+  }
+  return periods;
 }
 
 /* ---------------- Firebase helpers ---------------- */
@@ -562,9 +611,10 @@ async function submitPayout(e, investorId, termKey, editIndex){
       const res = await uploadFile(path, file);
       receiptUrl = res.url; receiptFileName = res.name;
     }
+    const existingPeriodKey = (editIndex!=null && term.payoutHistory[editIndex]) ? term.payoutHistory[editIndex].periodKey : undefined;
 
     let newHistory = [...term.payoutHistory];
-    const entry = sanitize({date, amount, note, receiptUrl, receiptFileName});
+    const entry = sanitize({date, amount, note, receiptUrl, receiptFileName, periodKey: existingPeriodKey});
     if(editIndex != null){ newHistory[editIndex] = entry; } else { newHistory.push(entry); }
     newHistory.sort((a,b) => a.date < b.date ? 1 : -1);
 
@@ -573,6 +623,34 @@ async function submitPayout(e, investorId, termKey, editIndex){
   }catch(err){
     alert('Error saving payout: ' + err.message);
     if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = editIndex!=null?'Save changes':'Save payout'; }
+  }
+}
+
+async function submitMarkPeriodPaid(e, investorId, termKey, periodKey){
+  e.preventDefault();
+  const f = e.target;
+  const submitBtn = f.querySelector('button[type="submit"]');
+  if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
+  try{
+    const inv = state.investors.find(x => x.id === investorId);
+    const term = inv.terms.find(t => t.termKey === termKey);
+    const date = readDateDropdown(f, 'date');
+    const amount = parseFloat(f.amount.value);
+    const note = f.note.value || '';
+    let receiptUrl=null, receiptFileName=null;
+    if(f.receiptFile && f.receiptFile.files[0]){
+      const file = f.receiptFile.files[0];
+      const path = `nta/investors/${investorId}/terms/${termKey}/payouts/receipt_${Date.now()}_${file.name}`;
+      const res = await uploadFile(path, file);
+      receiptUrl = res.url; receiptFileName = res.name;
+    }
+    let newHistory = [...term.payoutHistory, sanitize({date, amount, note, receiptUrl, receiptFileName, periodKey})];
+    newHistory.sort((a,b) => a.date < b.date ? 1 : -1);
+    await db.ref(`nta/investors/${investorId}/terms/${termKey}/payoutHistory`).set(newHistory);
+    openModal('schedule', {invid: investorId, termkey: termKey});
+  }catch(err){
+    alert('Error saving payout: ' + err.message);
+    if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = 'Mark as paid'; }
   }
 }
 
@@ -732,6 +810,7 @@ function renderTermCard(inv, t){
         <div class="krow"><span class="klabel">Agreement</span><span>${t.agreementFileUrl ? `<a href="${t.agreementFileUrl}" target="_blank" style="color:var(--teal);">View</a>` : 'None'}</span></div>
       </div>
       <div class="term-card-actions">
+        <button class="btn btn-ghost btn-sm" data-action="schedule" data-invid="${inv.id}" data-termkey="${t.termKey}">Schedule</button>
         <button class="btn btn-ghost btn-sm" data-action="pay" data-invid="${inv.id}" data-termkey="${t.termKey}">Payout</button>
         <button class="btn btn-ghost btn-sm" data-action="history" data-invid="${inv.id}" data-termkey="${t.termKey}">History</button>
         <button class="btn btn-ghost btn-sm" data-action="edit-term" data-invid="${inv.id}" data-termkey="${t.termKey}">Edit</button>
@@ -770,12 +849,31 @@ function renderInvestorRow(inv){
   return mainRow + detailRow;
 }
 
+function sortedInvestors(){
+  const arr = [...state.investors];
+  const dir = state.investorSortDir === 'desc' ? -1 : 1;
+  arr.sort((a,b) => {
+    if(state.investorSort === 'name') return a.name.localeCompare(b.name) * dir;
+    if(state.investorSort === 'principal') return (investorTotalPrincipal(a) - investorTotalPrincipal(b)) * dir;
+    if(state.investorSort === 'date') return investorFirstInvestmentDate(a).localeCompare(investorFirstInvestmentDate(b)) * dir;
+    return 0;
+  });
+  return arr;
+}
+
 function renderInvestors(){
-  const rows = state.investors.map(inv => renderInvestorRow(inv)).join('');
+  const rows = sortedInvestors().map(inv => renderInvestorRow(inv)).join('');
+  const arrow = state.investorSortDir === 'asc' ? '↑' : '↓';
   return `
     <div class="page-header">
       <div><div class="page-title">Invest &amp; Earn</div><div class="page-sub">Multi-term investor tracking. Total invested (new capital only): <b style="color:var(--gold);">${fmtINR(totalPrincipalAll())}</b>. Click a name to expand.</div></div>
       <button class="btn btn-primary" data-action="add-investor" style="width:auto;">+ Add Investor</button>
+    </div>
+    <div class="tabs-bar">
+      <span class="sort-label">Sort by:</span>
+      <div class="chip-btn ${state.investorSort==='name'?'active':''}" data-sort="name">Name ${state.investorSort==='name'?arrow:''}</div>
+      <div class="chip-btn ${state.investorSort==='principal'?'active':''}" data-sort="principal">Invested Amount ${state.investorSort==='principal'?arrow:''}</div>
+      <div class="chip-btn ${state.investorSort==='date'?'active':''}" data-sort="date">Investment Date ${state.investorSort==='date'?arrow:''}</div>
     </div>
     <div class="panel">
       <table>
@@ -1070,6 +1168,57 @@ function renderModal(){
       </div></div>`;
   }
 
+  if(type === 'mark-period-paid'){
+    const inv = state.investors.find(x=>x.id===payload.invid);
+    const t = inv.terms.find(x=>x.termKey===payload.termkey);
+    return `
+      <div class="modal-backdrop open"><div class="modal">
+        <h3>Mark Period Paid — ${payload.label}</h3>
+        <div class="field-hint" style="margin-top:0;">${inv.name} (${TERM_LABELS[t.termNumber]})</div>
+        <form id="markPeriodForm">
+          <div class="field"><label>Actual Payment Date (DD-MM-YYYY)</label>${dateDropdown('date', payload.dueDate)}</div>
+          <div class="field-hint">Auto-suggested due date — <b>${formatDMY(payload.dueDate)}</b>. Change if paid on a different day.</div>
+          <div class="field"><label>Amount (₹)</label><input type="number" step="0.01" name="amount" value="${Number(payload.amount).toFixed(2)}" required></div>
+          <div class="field"><label>Note</label><input name="note" placeholder="optional"></div>
+          <div class="field"><label>Payout Receipt (optional)</label><input type="file" name="receiptFile" accept=".pdf,.jpg,.jpeg,.png"></div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="width:auto;">Mark as paid</button>
+          </div>
+        </form>
+      </div></div>`;
+  }
+
+  if(type === 'schedule'){
+    const inv = state.investors.find(x=>x.id===payload.invid);
+    const t = inv.terms.find(x=>x.termKey===payload.termkey);
+    const periods = generateSchedule(t);
+    const rows = periods.map(p => {
+      const paidEntry = t.payoutHistory.find(h => h.periodKey === p.periodKey);
+      const isPaid = !!paidEntry;
+      return `
+      <tr>
+        <td>${p.label}</td>
+        <td class="mono">${formatDMY(p.dueDate)}</td>
+        <td class="mono">${fmtINR(isPaid?paidEntry.amount:p.amount)}</td>
+        <td style="text-align:center;">
+          <input type="checkbox" class="schedule-check" data-schedule-toggle data-invid="${inv.id}" data-termkey="${t.termKey}" data-periodkey="${p.periodKey}" data-duedate="${p.dueDate}" data-amount="${p.amount}" data-label="${p.label}" ${isPaid?'checked':''}>
+        </td>
+        <td>${isPaid && paidEntry.receiptUrl ? `<a href="${paidEntry.receiptUrl}" target="_blank" style="color:var(--teal);">View</a>` : (isPaid?'—':'')}</td>
+      </tr>`;
+    }).join('');
+    return `
+      <div class="modal-backdrop open"><div class="modal wide">
+        <h3>Payment Schedule — ${inv.name} (${TERM_LABELS[t.termNumber]})</h3>
+        <div class="field-hint" style="margin-top:0;">Total paid so far: <b>${fmtINR(totalPaid(t))}</b>. Check a box to mark that period as paid.</div>
+        <table>
+          <thead><tr><th>Period</th><th>Due Date</th><th>Amount</th><th>Paid</th><th>Receipt</th></tr></thead>
+          <tbody>${rows || `<tr><td colspan="5"><div class="empty-state">No schedule available — check the term's investment date and lock-in.</div></td></tr>`}</tbody>
+        </table>
+        <div class="modal-actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Close</button></div>
+      </div></div>`;
+  }
+
   if(type === 'history'){
     const inv = state.investors.find(x=>x.id===payload.invid);
     const t = inv.terms.find(x=>x.termKey===payload.termkey);
@@ -1132,6 +1281,13 @@ function bindEvents(){
   document.querySelectorAll('[data-filter]').forEach(el => el.addEventListener('click', () => { state.studentProgramFilter = el.getAttribute('data-filter'); render(); }));
   document.querySelectorAll('[data-action="close-modal"]').forEach(el => el.addEventListener('click', closeModal));
 
+  document.querySelectorAll('[data-sort]').forEach(el => el.addEventListener('click', () => {
+    const key = el.getAttribute('data-sort');
+    if(state.investorSort === key){ state.investorSortDir = state.investorSortDir === 'asc' ? 'desc' : 'asc'; }
+    else { state.investorSort = key; state.investorSortDir = 'asc'; }
+    render();
+  }));
+
   document.querySelectorAll('[data-toggle-investor]').forEach(el => el.addEventListener('click', () => {
     const id = el.getAttribute('data-toggle-investor');
     state.expandedInvestorId = state.expandedInvestorId === id ? null : id;
@@ -1156,6 +1312,7 @@ function bindEvents(){
     if(confirm('Remove this investor and all their terms? This also removes their login if one exists.')) deleteInvestor(el.getAttribute('data-invid'));
   }));
 
+  document.querySelectorAll('[data-action="schedule"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openModal('schedule', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey')}); }));
   document.querySelectorAll('[data-action="pay"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openModal('pay', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey')}); }));
   document.querySelectorAll('[data-action="history"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openModal('history', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey')}); }));
   document.querySelectorAll('[data-action="edit-payout"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); openModal('edit-payout', {invid: el.getAttribute('data-invid'), termkey: el.getAttribute('data-termkey'), idx: parseInt(el.getAttribute('data-idx'),10)}); }));
@@ -1165,6 +1322,31 @@ function bindEvents(){
       const invid = el.getAttribute('data-invid'), termkey = el.getAttribute('data-termkey');
       deletePayout(invid, termkey, parseInt(el.getAttribute('data-idx'),10));
       openModal('history', {invid, termkey});
+    }
+  }));
+
+  document.querySelectorAll('[data-schedule-toggle]').forEach(el => el.addEventListener('change', () => {
+    const invid = el.getAttribute('data-invid'), termkey = el.getAttribute('data-termkey'), periodkey = el.getAttribute('data-periodkey');
+    const inv = state.investors.find(x=>x.id===invid);
+    const t = inv.terms.find(x=>x.termKey===termkey);
+    const existingIdx = t.payoutHistory.findIndex(h=>h.periodKey===periodkey);
+    if(el.checked){
+      openModal('mark-period-paid', {
+        invid, termkey, periodkey,
+        dueDate: el.getAttribute('data-duedate'),
+        amount: el.getAttribute('data-amount'),
+        label: el.getAttribute('data-label')
+      });
+    } else {
+      if(existingIdx>=0){
+        if(confirm('Mark this period as unpaid? This removes the recorded payout.')){
+          deletePayout(invid, termkey, existingIdx).then(() => openModal('schedule', {invid, termkey}));
+        } else {
+          render();
+        }
+      } else {
+        render();
+      }
     }
   }));
 
@@ -1182,6 +1364,8 @@ function bindEvents(){
   if(termForm) termForm.addEventListener('submit', e => submitTermForm(e, state.modal.payload.invid, state.modal.payload.termkey));
   const payForm = document.getElementById('payoutForm');
   if(payForm) payForm.addEventListener('submit', e => submitPayout(e, state.modal.payload.invid, state.modal.payload.termkey, state.modal.payload.idx));
+  const markPeriodForm = document.getElementById('markPeriodForm');
+  if(markPeriodForm) markPeriodForm.addEventListener('submit', e => submitMarkPeriodPaid(e, state.modal.payload.invid, state.modal.payload.termkey, state.modal.payload.periodkey));
   const stForm = document.getElementById('studentForm');
   if(stForm) stForm.addEventListener('submit', e => submitStudentForm(e, state.modal.payload.id));
 }
