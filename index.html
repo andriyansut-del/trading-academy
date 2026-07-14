@@ -308,6 +308,11 @@ function investorFirstInvestmentDate(inv){
 }
 function totalPrincipalAll(){ return state.investors.reduce((s,i)=>s+investorTotalPrincipal(i),0); }
 function totalPaidAll(){ return state.investors.reduce((s,i)=>s+investorTotalPaid(i),0); }
+function totalPrincipalByFrequency(freq){
+  return state.investors.reduce((s,inv) =>
+    s + inv.terms.filter(t => isNewMoney(t) && t.roiFrequency === freq).reduce((s2,t)=>s2+t.principal,0)
+  , 0);
+}
 function allTermsFlat(){
   const out = [];
   state.investors.forEach(inv => inv.terms.forEach(t => out.push({inv, term:t})));
@@ -755,6 +760,8 @@ function renderAdminTab(){
 
 function renderOverview(){
   const totalPrincipal = totalPrincipalAll();
+  const totalMonthlyPrincipal = totalPrincipalByFrequency('Monthly');
+  const totalYearlyPrincipal = totalPrincipalByFrequency('Yearly');
   const monthlyObl = monthlyObligationTotal();
   const yearlyObl = yearlyObligationTotal();
   const feesPaid = state.students.filter(s=>s.feeStatus==='Paid').reduce((s,x)=>s+x.fee,0);
@@ -767,6 +774,8 @@ function renderOverview(){
     <div class="page-header"><div><div class="page-title">Overview</div><div class="page-sub">Both programs, at a glance.</div></div></div>
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-label">Total Investment Received (New Capital)</div><div class="stat-value gold">${fmtINR(totalPrincipal)}</div></div>
+      <div class="stat-card"><div class="stat-label">Total Investment — Monthly ROI</div><div class="stat-value teal">${fmtINR(totalMonthlyPrincipal)}</div></div>
+      <div class="stat-card"><div class="stat-label">Total Investment — Yearly ROI</div><div class="stat-value gold">${fmtINR(totalYearlyPrincipal)}</div></div>
       <div class="stat-card"><div class="stat-label">Total Payouts Made</div><div class="stat-value teal">${fmtINR(paidOut)}</div></div>
       <div class="stat-card"><div class="stat-label">Pending Payouts (Unpaid, Active Terms)</div><div class="stat-value red">${fmtINR(pending)}</div></div>
       <div class="stat-card"><div class="stat-label">Monthly ROI Obligation (Active)</div><div class="stat-value">${fmtINR(monthlyObl)}</div></div>
