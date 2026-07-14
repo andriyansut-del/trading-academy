@@ -231,13 +231,6 @@ function readDateDropdown(form, name){
 function termDropdown(name, selected){
   return `<select name="${name}" required>${[1,2,3,4,5].map(n=>`<option value="${n}" ${Number(selected)===n?'selected':''}>${TERM_LABELS[n]}</option>`).join('')}</select>`;
 }
-function investmentTypeDropdown(name, selected){
-  const val = selected || 'New';
-  return `<select name="${name}">
-    <option value="New" ${val==='New'?'selected':''}>New Money (adds to total capital)</option>
-    <option value="Renewal" ${val==='Renewal'?'selected':''}>Renewal (same capital continuing, no new funds)</option>
-  </select>`;
-}
 
 /* ---------------- ROI / due-date calculations ---------------- */
 function addMonths(dateStr, months){
@@ -298,9 +291,16 @@ function termStatusInfo(t){
   return isPaidCurrentPeriod(t) ? {label:'Paid', cls:'teal'} : {label:'Pending', cls:'red'};
 }
 function totalPaid(t){ return t.payoutHistory.reduce((s,p)=>s+p.amount,0); }
-function isNewMoney(t){ return (t.investmentType || 'New') === 'New'; }
+function termCarriedForward(t){ return Math.min(t.carriedForwardAmount || 0, t.principal || 0); }
+function termNewMoney(t){ return Math.max(0, (t.principal||0) - termCarriedForward(t)); }
+function termMoneyTag(t){
+  const cf = termCarriedForward(t);
+  if(cf <= 0) return {label:'New Money', cls:'gold'};
+  if(cf >= t.principal) return {label:'Full Renewal', cls:'teal'};
+  return {label:'Renewal + Top-up', cls:'teal'};
+}
 
-function investorTotalPrincipal(inv){ return inv.terms.filter(isNewMoney).reduce((s,t)=>s+t.principal,0); }
+function investorTotalPrincipal(inv){ return inv.terms.reduce((s,t)=>s+termNewMoney(t),0); }
 function investorTotalPaid(inv){ return inv.terms.reduce((s,t)=>s+totalPaid(t),0); }
 function investorFirstInvestmentDate(inv){
   if(!inv.terms.length) return '';
@@ -310,7 +310,7 @@ function totalPrincipalAll(){ return state.investors.reduce((s,i)=>s+investorTot
 function totalPaidAll(){ return state.investors.reduce((s,i)=>s+investorTotalPaid(i),0); }
 function totalPrincipalByFrequency(freq){
   return state.investors.reduce((s,inv) =>
-    s + inv.terms.filter(t => isNewMoney(t) && t.roiFrequency === freq).reduce((s2,t)=>s2+t.principal,0)
+    s + inv.terms.filter(t => t.roiFrequency === freq).reduce((s2,t)=>s2+termNewMoney(t),0)
   , 0);
 }
 function allTermsFlat(){
@@ -381,7 +381,10 @@ function normalizeInvestor(raw){
   const termsObj = raw.terms || {};
   const terms = Object.keys(termsObj).map(k => {
     const t = termsObj[k];
-    return {...t, termKey:k, payoutHistory: t.payoutHistory ? Object.values(t.payoutHistory) : []};
+    const carriedForwardAmount = t.carriedForwardAmount != null
+      ? t.carriedForwardAmount
+      : (t.investmentType === 'Renewal' ? t.principal : 0);
+    return {...t, termKey:k, carriedForwardAmount, payoutHistory: t.payoutHistory ? Object.values(t.payoutHistory) : []};
   }).sort((a,b)=>(a.termNumber||0)-(b.termNumber||0));
   return {...raw, terms};
 }
@@ -476,8 +479,8 @@ async function submitNewInvestorForm(e){
     const investorId = uid();
     const termKey = uid();
     const termNumber = parseInt(f.termNumber.value,10);
-    const investmentType = f.investmentType.value;
     const principal = parseFloat(f.principal.value);
+    const carriedForwardAmount = parseFloat(f.carriedForwardAmount.value)||0;
     const roiMonthlyPercent = parseFloat(f.roiMonthlyPercent.value)||0;
     const roiYearlyPercent = parseFloat(f.roiYearlyPercent.value)||0;
     const roiFrequency = f.roiFrequency.value;
@@ -495,7 +498,7 @@ async function submitNewInvestorForm(e){
     const newInv = {
       id: investorId, name:f.name.value, email:f.email.value, phone:f.phone.value,
       terms: { [termKey]: sanitize({
-        termKey, termNumber, investmentType, principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
+        termKey, termNumber, principal, carriedForwardAmount, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
         investmentDate, lockInMonths, agreementFileUrl, agreementFileName, payoutHistory: []
       })}
     };
@@ -553,8 +556,8 @@ async function submitTermForm(e, investorId, termKey){
     const existingTerm = termKey ? inv.terms.find(t=>t.termKey===termKey) : null;
 
     const termNumber = parseInt(f.termNumber.value,10);
-    const investmentType = f.investmentType.value;
     const principal = parseFloat(f.principal.value);
+    const carriedForwardAmount = parseFloat(f.carriedForwardAmount.value)||0;
     const roiMonthlyPercent = parseFloat(f.roiMonthlyPercent.value)||0;
     const roiYearlyPercent = parseFloat(f.roiYearlyPercent.value)||0;
     const roiFrequency = f.roiFrequency.value;
@@ -571,7 +574,7 @@ async function submitTermForm(e, investorId, termKey){
     }
 
     const termData = {
-      termKey:key, termNumber, investmentType, principal, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
+      termKey:key, termNumber, principal, carriedForwardAmount, roiFrequency, roiMonthlyPercent, roiYearlyPercent,
       investmentDate, lockInMonths, agreementFileUrl, agreementFileName,
       payoutHistory: existingTerm ? existingTerm.payoutHistory : []
     };
@@ -794,20 +797,24 @@ function renderOverview(){
 
 function renderTermCard(inv, t){
   const status = termStatusInfo(t);
-  const isNew = isNewMoney(t);
+  const moneyTag = termMoneyTag(t);
   const ended = isTermEnded(t);
+  const cf = termCarriedForward(t);
+  const newMoney = termNewMoney(t);
   return `
     <div class="term-card ${ended?'ended':''}">
       <div class="term-card-head">
         <h4>${TERM_LABELS[t.termNumber]||('Term '+t.termNumber)}</h4>
         <div class="term-card-tags">
-          <span class="tag ${isNew?'gold':'teal'}">${isNew?'New Money':'Renewal'}</span>
+          <span class="tag ${moneyTag.cls}">${moneyTag.label}</span>
           <span class="tag ${t.roiFrequency==='Monthly'?'teal':'gold'}">${t.roiFrequency}</span>
         </div>
       </div>
       ${ended ? `<div class="term-card-banner">Lock-in ended ${formatDMY(investmentEndDate(t))}. No further ROI accrues on this term — renew with "+ Add Term" if the investor continues, or leave as a closed historical record.</div>` : ''}
       <div class="term-card-body">
-        <div class="krow"><span class="klabel">Principal</span><span class="mono">${fmtINR(t.principal)}</span></div>
+        <div class="krow"><span class="klabel">Principal (Total This Term)</span><span class="mono">${fmtINR(t.principal)}</span></div>
+        ${cf > 0 ? `<div class="krow"><span class="klabel">Carried Forward</span><span class="mono">${fmtINR(cf)}</span></div>
+        <div class="krow"><span class="klabel">New Capital This Term</span><span class="mono" style="color:var(--gold);">${fmtINR(newMoney)}</span></div>` : ''}
         <div class="krow"><span class="klabel">Monthly / Yearly ROI</span><span class="mono">${t.roiMonthlyPercent||0}% / ${t.roiYearlyPercent||0}%</span></div>
         <div class="krow"><span class="klabel">Investment Date</span><span class="mono">${formatDMY(t.investmentDate)}</span></div>
         <div class="krow"><span class="klabel">Lock-in / End Date</span><span class="mono">${t.lockInMonths||0} mo · ${formatDMY(investmentEndDate(t))}</span></div>
@@ -993,9 +1000,10 @@ function renderTermPortfolioBlock(inv, t){
     </tr>`).join('');
   const status = termStatusInfo(t);
   const ended = isTermEnded(t);
+  const moneyTag = termMoneyTag(t);
   return `
     <div class="portfolio-hero">
-      <div class="hero-label">${TERM_LABELS[t.termNumber]||'Term'} — Principal Invested ${isNewMoney(t)?'':'<span class="tag teal" style="margin-left:6px;">Renewal</span>'} ${ended?'<span class="tag grey" style="margin-left:6px;">Completed</span>':''}</div>
+      <div class="hero-label">${TERM_LABELS[t.termNumber]||'Term'} — Principal Invested <span class="tag ${moneyTag.cls}" style="margin-left:6px;">${moneyTag.label}</span> ${ended?'<span class="tag grey" style="margin-left:6px;">Completed</span>':''}</div>
       <div class="hero-value gold" style="color:var(--gold);">${fmtINR(t.principal)}</div>
       <div class="hero-grid">
         <div><div class="hero-label">Monthly ROI</div><div class="hero-value">${t.roiMonthlyPercent||0}%</div></div>
@@ -1049,8 +1057,8 @@ function renderModal(){
             <div class="field"><label>Phone</label><input name="phone"></div>
           </div>
           <div class="field"><label>Term</label>${termDropdown('termNumber', 1)}</div>
-          <div class="field"><label>Investment Type</label>${investmentTypeDropdown('investmentType', 'New')}</div>
-          <div class="field"><label>Invested Amount (₹)</label><input type="number" step="0.01" name="principal" required></div>
+          <div class="field"><label>Invested Amount — Total This Term (₹)</label><input type="number" step="0.01" name="principal" required></div>
+          <div class="field"><label>Carried Forward From Previous Term (₹) — leave 0 for fresh new investment</label><input type="number" step="0.01" name="carriedForwardAmount" value="0"></div>
           <div class="field"><label>Date of Investment (DD-MM-YYYY)</label>${dateDropdown('investmentDate', todayStr())}</div>
           <div class="field"><label>Lock-in Period (months)</label><input type="number" step="1" min="0" name="lockInMonths" required></div>
           <div class="field">
@@ -1123,9 +1131,9 @@ function renderModal(){
         <h3>${t ? 'Edit Term — '+inv.name : 'Add Term — '+inv.name}</h3>
         <form id="termForm">
           <div class="field"><label>Term</label>${termDropdown('termNumber', t?t.termNumber:2)}</div>
-          <div class="field"><label>Investment Type</label>${investmentTypeDropdown('investmentType', t?t.investmentType:'Renewal')}</div>
-          <div class="field-hint">Choose <b>Renewal</b> if this term simply continues the same capital from a previous term (won't double-count in totals). Choose <b>New Money</b> if this is genuinely additional funds.</div>
-          <div class="field"><label>Invested Amount (₹)</label><input type="number" step="0.01" name="principal" required value="${t?t.principal:''}"></div>
+          <div class="field"><label>Invested Amount — Total This Term (₹)</label><input type="number" step="0.01" name="principal" required value="${t?t.principal:''}"></div>
+          <div class="field"><label>Carried Forward From Previous Term (₹)</label><input type="number" step="0.01" name="carriedForwardAmount" value="${t?(t.carriedForwardAmount||0):0}"></div>
+          <div class="field-hint">Enter how much of the Principal above is simply <b>continuing</b> from an earlier term (not new). The remainder is counted as new investment in totals. E.g. Principal ₹19,00,000 with ₹11,00,000 carried forward = ₹8,00,000 new. Leave 0 if this whole amount is fresh capital.</div>
           <div class="field"><label>Date of Investment (DD-MM-YYYY)</label>${dateDropdown('investmentDate', t?t.investmentDate:todayStr())}</div>
           <div class="field"><label>Lock-in Period (months)</label><input type="number" step="1" min="0" name="lockInMonths" required value="${t?t.lockInMonths:''}"></div>
           <div class="field">
